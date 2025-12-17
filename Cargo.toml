@@ -2,6 +2,9 @@
 name = "zabi-rs"
 version = "0.1.0"
 edition = "2021"
+description = "Zero-Allocation ABI Decoder for Rust"
+license = "MIT"
+repository = "https://github.com/smallyunet/zabi-rs"
 
 [dependencies]
 thiserror = { version = "1.0", default-features = false }
