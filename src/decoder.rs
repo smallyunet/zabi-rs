@@ -38,6 +38,118 @@ pub fn read_u256(data: &[u8], offset: usize) -> Result<ZU256<'_>, ZError> {
 }
 
 #[inline(always)]
+pub fn read_int256(data: &[u8], offset: usize) -> Result<crate::types::ZInt256<'_>, ZError> {
+    let word = peek_word(data, offset)?;
+    Ok(crate::types::ZInt256(word))
+}
+
+#[inline(always)]
+pub fn read_u8(data: &[u8], offset: usize) -> Result<u8, ZError> {
+    let word = peek_word(data, offset)?;
+    // Check padding (bytes 0..31 must be 0)
+    for i in 0..31 {
+        if word[i] != 0 {
+            return Err(ZError::Custom("u8 value invalid (high bits set)"));
+        }
+    }
+    Ok(word[31])
+}
+
+#[inline(always)]
+pub fn read_i8(data: &[u8], offset: usize) -> Result<i8, ZError> {
+    let word = peek_word(data, offset)?;
+    let val = word[31] as i8;
+    let padding_byte = if val < 0 { 0xff } else { 0x00 };
+    for i in 0..31 {
+        if word[i] != padding_byte {
+            return Err(ZError::Custom("i8 value invalid (bad padding)"));
+        }
+    }
+    Ok(val)
+}
+
+#[inline(always)]
+pub fn read_u16(data: &[u8], offset: usize) -> Result<u16, ZError> {
+    let word = peek_word(data, offset)?;
+    if !word[0..30].iter().all(|&b| b == 0) {
+        return Err(ZError::Custom("u16 value invalid (high bits set)"));
+    }
+    Ok(u16::from_be_bytes([word[30], word[31]]))
+}
+
+#[inline(always)]
+pub fn read_i16(data: &[u8], offset: usize) -> Result<i16, ZError> {
+    let word = peek_word(data, offset)?;
+    let val = i16::from_be_bytes([word[30], word[31]]);
+    let padding_byte = if val < 0 { 0xff } else { 0x00 };
+    if !word[0..30].iter().all(|&b| b == padding_byte) {
+        return Err(ZError::Custom("i16 value invalid (bad padding)"));
+    }
+    Ok(val)
+}
+
+#[inline(always)]
+pub fn read_u32(data: &[u8], offset: usize) -> Result<u32, ZError> {
+    let word = peek_word(data, offset)?;
+    if !word[0..28].iter().all(|&b| b == 0) {
+        return Err(ZError::Custom("u32 value invalid (high bits set)"));
+    }
+    // Safe slice access
+    Ok(u32::from_be_bytes(word[28..32].try_into().unwrap()))
+}
+
+#[inline(always)]
+pub fn read_i32(data: &[u8], offset: usize) -> Result<i32, ZError> {
+    let word = peek_word(data, offset)?;
+    let val = i32::from_be_bytes(word[28..32].try_into().unwrap());
+    let padding_byte = if val < 0 { 0xff } else { 0x00 };
+    if !word[0..28].iter().all(|&b| b == padding_byte) {
+        return Err(ZError::Custom("i32 value invalid (bad padding)"));
+    }
+    Ok(val)
+}
+
+#[inline(always)]
+pub fn read_u64(data: &[u8], offset: usize) -> Result<u64, ZError> {
+    let word = peek_word(data, offset)?;
+    if !word[0..24].iter().all(|&b| b == 0) {
+        return Err(ZError::Custom("u64 value invalid (high bits set)"));
+    }
+    Ok(u64::from_be_bytes(word[24..32].try_into().unwrap()))
+}
+
+#[inline(always)]
+pub fn read_i64(data: &[u8], offset: usize) -> Result<i64, ZError> {
+    let word = peek_word(data, offset)?;
+    let val = i64::from_be_bytes(word[24..32].try_into().unwrap());
+    let padding_byte = if val < 0 { 0xff } else { 0x00 };
+    if !word[0..24].iter().all(|&b| b == padding_byte) {
+        return Err(ZError::Custom("i64 value invalid (bad padding)"));
+    }
+    Ok(val)
+}
+
+#[inline(always)]
+pub fn read_u128(data: &[u8], offset: usize) -> Result<u128, ZError> {
+    let word = peek_word(data, offset)?;
+    if !word[0..16].iter().all(|&b| b == 0) {
+        return Err(ZError::Custom("u128 value invalid (high bits set)"));
+    }
+    Ok(u128::from_be_bytes(word[16..32].try_into().unwrap()))
+}
+
+#[inline(always)]
+pub fn read_i128(data: &[u8], offset: usize) -> Result<i128, ZError> {
+    let word = peek_word(data, offset)?;
+    let val = i128::from_be_bytes(word[16..32].try_into().unwrap());
+    let padding_byte = if val < 0 { 0xff } else { 0x00 };
+    if !word[0..16].iter().all(|&b| b == padding_byte) {
+        return Err(ZError::Custom("i128 value invalid (bad padding)"));
+    }
+    Ok(val)
+}
+
+#[inline(always)]
 pub fn read_bool(data: &[u8], offset: usize) -> Result<ZBool, ZError> {
     let word = peek_word(data, offset)?;
     // Bool is uint256, last byte is 0 or 1.

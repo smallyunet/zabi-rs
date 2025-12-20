@@ -4,7 +4,13 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 
 ## 🚀 Released
 
-### v0.2.0 - Extended Types (Current)
+### v0.0.3 - Primitives & Perf (Current)
+- [x] **Integers**:
+    - [x] Signed integers (`int8` to `int256`).
+    - [x] Smaller unsigned integers (`uint8` to `uint128`).
+    - [x] Safe casting helpers.
+
+### v0.0.2 - Extended Types
 - [x] **New Types Support**:
     - [x] `bool` (uint256 encoded).
     - [x] `string` (UTF-8 validation on zero-copy slices).
@@ -12,25 +18,6 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
     - [x] Dynamic arrays `T[]` (returning iterators/wrappers).
 - [x] **Decoder Improvements**:
     - [x] Offset-based decoding logic updates.
-
-### v0.1.0 - Core Foundation
-- [x] **Project Structure**: `#![no_std]` setup.
-- [x] **Zero-copy Primitives**:
-    - `ZAddress` (wraps `&[u8; 20]`).
-    - `ZU256` (wraps `&[u8; 32]`).
-    - `ZBytes` (wraps `&[u8]`).
-- [x] **Basic Decoders**: `read_u256`, `read_address`, `read_bytes`.
-- [x] **Safety**: Bounds checking and error handling.
-
----
-
-## 📅 Upcoming Milestones
-
-### v0.2.1 - Complete Primitives (Planned)
-- [ ] **Integers**:
-    - [ ] Signed integers (`int8` to `int256`).
-    - [ ] Smaller unsigned integers (`uint8` to `uint128`).
-    - [ ] Safe casting helpers (e.g. `try_into_u64`).
 
 ### v0.3.0 - Ergonomics & Developer Experience
 Focus on reducing boilerplate and making the library easier to use.

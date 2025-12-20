@@ -21,6 +21,12 @@ Unlike standard libraries like `ethers-rs` or `alloy-rs` which decode data into 
 ## Performance
 
 <!-- BENCHMARK_TABLE_START -->
+
+| Scenario | alloy | ethers |
+|----------|---|---|
+| Uint256 | 27.499 ns | 66.519 ns | 
+| Uint64 | 28.050 ns | 60.077 ns | 
+
 <!-- BENCHMARK_TABLE_END -->
 
 ## Installation

@@ -150,5 +150,40 @@ fn bench_array(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_uint256, bench_simple_tuple, bench_array);
+fn bench_u64(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Decoding/Uint64");
+    // Encoded as uint256(123456789)
+    let mut data = [0u8; 32];
+    let val: u64 = 123456789;
+    data[24..32].copy_from_slice(&val.to_be_bytes());
+    
+    // zabi-rs
+    group.bench_function("zabi-rs", |b| {
+        b.iter(|| {
+            let res = zabi_rs::read_u64(black_box(&data), 0).unwrap();
+            black_box(res);
+        })
+    });
+    
+    // alloy
+    group.bench_function("alloy", |b| {
+        b.iter(|| {
+             let res = <alloy_sol_types::sol_data::Uint<64>>::abi_decode(black_box(&data), true).unwrap();
+             black_box(res);
+        })
+    });
+    
+    // ethers
+    let params = vec![ethers::abi::ParamType::Uint(64)];
+    group.bench_function("ethers", |b| {
+        b.iter(|| {
+             let res = ethers::abi::decode(&params, black_box(&data)).unwrap();
+             black_box(res);
+        })
+    });
+    
+    group.finish();
+}
+
+criterion_group!(benches, bench_uint256, bench_u64, bench_simple_tuple, bench_array);
 criterion_main!(benches);

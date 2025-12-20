@@ -100,6 +100,32 @@ impl<'a> fmt::Display for ZU256<'a> {
     }
 }
 
+/// Wrapper around a 32-byte EVM word (int256) reference.
+/// Semantically represents a signed integer.
+#[derive(Clone, Copy, PartialEq)]
+pub struct ZInt256<'a>(pub &'a [u8; 32]);
+
+impl<'a> fmt::Debug for ZInt256<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ZInt256(0x")?;
+        for byte in self.0 {
+            write!(f, "{:02x}", byte)?;
+        }
+        write!(f, ")")
+    }
+}
+
+impl<'a> fmt::Display for ZInt256<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // We display hex for now, interpreting as signed decimal would require big logic
+        write!(f, "0x")?;
+        for byte in self.0 {
+            write!(f, "{:02x}", byte)?;
+        }
+        Ok(())
+    }
+}
+
 /// Wrapper around a variable-length byte array reference.
 #[derive(Clone, Copy, PartialEq)]
 pub struct ZBytes<'a>(pub &'a [u8]);

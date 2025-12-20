@@ -9,9 +9,13 @@ pub mod decoder;
 pub mod error;
 pub mod types;
 
-pub use decoder::{read_address_from_word, read_u256, read_bytes, read_bool, read_string, read_array_fixed, read_array_dyn};
+pub use decoder::{
+    read_address_from_word, read_u256, read_int256, read_bytes, read_bool, read_string, read_array_fixed, read_array_dyn,
+    read_u8, read_u16, read_u32, read_u64, read_u128,
+    read_i8, read_i16, read_i32, read_i64, read_i128
+};
 pub use error::ZError;
-pub use types::{ZAddress, ZU256, ZBytes, ZBool, ZString, ZArray};
+pub use types::{ZAddress, ZU256, ZInt256, ZBytes, ZBool, ZString, ZArray};
 
 /// The main trait for zero-copy decoding.
 /// The main trait for zero-copy decoding.
@@ -36,6 +40,34 @@ impl<'a> ZDecode<'a> for ZBool {
         decoder::read_bool(data, offset)
     }
 }
+
+impl<'a> ZDecode<'a> for ZInt256<'a> {
+    fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
+        decoder::read_int256(data, offset)
+    }
+}
+
+macro_rules! impl_zdecode_primitive {
+    ($t:ty, $func:path) => {
+        impl<'a> ZDecode<'a> for $t {
+            fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
+                $func(data, offset)
+            }
+        }
+    };
+}
+
+impl_zdecode_primitive!(u8, decoder::read_u8);
+impl_zdecode_primitive!(u16, decoder::read_u16);
+impl_zdecode_primitive!(u32, decoder::read_u32);
+impl_zdecode_primitive!(u64, decoder::read_u64);
+impl_zdecode_primitive!(u128, decoder::read_u128);
+
+impl_zdecode_primitive!(i8, decoder::read_i8);
+impl_zdecode_primitive!(i16, decoder::read_i16);
+impl_zdecode_primitive!(i32, decoder::read_i32);
+impl_zdecode_primitive!(i64, decoder::read_i64);
+impl_zdecode_primitive!(i128, decoder::read_i128);
 
 impl<'a> ZDecode<'a> for ZString<'a> {
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
@@ -187,5 +219,51 @@ mod tests {
         assert_eq!(arr_dyn.len(), 2);
         assert_eq!(arr_dyn.get(0).unwrap().0[31], 3);
         assert_eq!(arr_dyn.get(1).unwrap().0[31], 4);
+    }
+
+    #[test]
+    fn test_integers() {
+        use crate::decoder::*;
+        use alloc::vec::Vec;
+
+        let mut data = Vec::new();
+
+        // 1. u8 = 0xFF
+        let mut w1 = [0u8; 32];
+        w1[31] = 0xFF;
+        data.extend_from_slice(&w1);
+
+        // 2. u64 = 0xDEADBEEF
+        let mut w2 = [0u8; 32];
+        // 0xDEADBEEF = 3735928559
+        let val_u64: u64 = 0xDEADBEEF;
+        let bytes_u64 = val_u64.to_be_bytes();
+        w2[24..32].copy_from_slice(&bytes_u64);
+        data.extend_from_slice(&w2);
+
+        // 3. i8 = -1 (0xFF...FF)
+        let mut w3 = [0xff; 32];
+        data.extend_from_slice(&w3);
+
+        // 4. i8 = 1 (0x00...01)
+        let mut w4 = [0u8; 32];
+        w4[31] = 1;
+        data.extend_from_slice(&w4);
+
+        // 5. Invalid u8 (dirty high bits)
+        let mut w5 = [0u8; 32];
+        w5[30] = 1; // dirty
+        w5[31] = 1;
+        data.extend_from_slice(&w5);
+
+        // Test Decode
+        assert_eq!(read_u8(&data, 0).unwrap(), 0xFF);
+        assert_eq!(read_u64(&data, 32).unwrap(), 0xDEADBEEF);
+        
+        assert_eq!(read_i8(&data, 64).unwrap(), -1);
+        assert_eq!(read_i8(&data, 96).unwrap(), 1);
+
+        // Test Invalid
+        assert!(read_u8(&data, 128).is_err());
     }
 }
