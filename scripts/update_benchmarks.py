@@ -30,28 +30,31 @@ def parse_results(output):
     # Lines look like:
     # Decoding/Uint256/zabi-rs time:   [2.3364 ns 2.3421 ns 2.3486 ns]
     
-    regex = r"([\w\/]+)\s+time:\s+\[[\d\.]+\s+\w+\s+([\d\.]+)\s+(\w+)\s+[\d\.]+\s+\w+\]"
+    regex = r"([\w\/-]+)\s+time:\s+\[[\d\.]+\s+\w+\s+([\d\.]+)\s+(\w+)\s+[\d\.]+\s+\w+\]"
     
     data = {}
     
-    for line in output.splitlines():
-        match = re.search(regex, line)
-        if match:
-            full_name = match.group(1) # e.g. Decoding/Uint256/zabi-rs
-            time_val = match.group(2)
-            time_unit = match.group(3)
+    
+    # Use re.finditer on the full output to handle multiline output from criterion
+    # \s+ will match newlines
+    matches = re.finditer(regex, output)
+    
+    for match in matches:
+        full_name = match.group(1) # e.g. Decoding/Uint256/zabi-rs
+        time_val = match.group(2)
+        time_unit = match.group(3)
+        
+        # Parse full_name
+        # Expected format: Decoding/Scenario/Library
+        parts = full_name.split('/')
+        if len(parts) >= 3:
+            scenario = parts[1]
+            library = parts[2]
             
-            # Parse full_name
-            # Expected format: Decoding/Scenario/Library
-            parts = full_name.split('/')
-            if len(parts) >= 3:
-                scenario = parts[1]
-                library = parts[2]
-                
-                if scenario not in data:
-                    data[scenario] = {}
-                
-                data[scenario][library] = f"{time_val} {time_unit}"
+            if scenario not in data:
+                data[scenario] = {}
+            
+            data[scenario][library] = f"{time_val} {time_unit}"
     
     return data
 
