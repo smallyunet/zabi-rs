@@ -10,10 +10,10 @@
 - [x] Bounds checking and error handling.
 
 ## v0.2.0 - Extended Types
-- [ ] `bool` support.
-- [ ] `string` support (UTF-8 validation on zero-copy slices).
-- [ ] Fixed-size arrays `T[N]`.
-- [ ] Dynamic arrays `T[]` (returning iterators over slices).
+- [x] `bool` support.
+- [x] `string` support (UTF-8 validation on zero-copy slices).
+- [x] Fixed-size arrays `T[N]`.
+- [x] Dynamic arrays `T[]` (returning iterators over slices).
 - [ ] Nested tuples.
 
 ## v0.3.0 - Ergonomics

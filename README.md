@@ -2,6 +2,10 @@
 
 **Zero-Allocation ABI Decoder** for Rust.
 
+![Crates.io Version](https://img.shields.io/crates/v/zabi-rs)
+![Crates.io License](https://img.shields.io/crates/l/zabi-rs)
+
+
 `zabi-rs` is a high-performance, `#![no_std]` compatible library designed for decoding Ethereum Virtual Machine (EVM) ABI encoded data **without any heap allocation**.
 
 Unlike standard libraries like `ethers-rs` or `alloy-rs` which decode data into owned types (`Vec`, `String`, `BigInt`), `zabi-rs` maps Rust structs directly to the underlying raw byte slice (`&'a [u8]`) using explicit lifetimes.
@@ -20,7 +24,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-zabi-rs = { path = "." } # Replace with version when published
+zabi-rs = "0.0.2"
 ```
 
 ## Usage
