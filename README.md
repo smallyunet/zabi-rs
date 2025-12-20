@@ -18,6 +18,11 @@ Unlike standard libraries like `ethers-rs` or `alloy-rs` which decode data into 
 - 🔧 **no_std Compatible**: Ready for strict embedded or WASM environments.
 - 📦 **Primitive Support**: `address`, `uint256`, `bytes` (Basic types supported currently).
 
+## Performance
+
+<!-- BENCHMARK_TABLE_START -->
+<!-- BENCHMARK_TABLE_END -->
+
 ## Installation
 
 Add this to your `Cargo.toml`:

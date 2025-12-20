@@ -9,7 +9,7 @@ pub mod decoder;
 pub mod error;
 pub mod types;
 
-pub use decoder::{read_address_from_word, read_u256, read_bytes};
+pub use decoder::{read_address_from_word, read_u256, read_bytes, read_bool, read_string, read_array_fixed, read_array_dyn};
 pub use error::ZError;
 pub use types::{ZAddress, ZU256, ZBytes, ZBool, ZString, ZArray};
 

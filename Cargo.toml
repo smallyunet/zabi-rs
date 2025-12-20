@@ -8,3 +8,14 @@ repository = "https://github.com/smallyunet/zabi-rs"
 
 [dependencies]
 thiserror = { version = "1.0", default-features = false }
+
+[dev-dependencies]
+criterion = "0.5"
+alloy-sol-types = "0.8"
+ethers = "2.0"
+hex = "0.4"
+tokio = { version = "1", features = ["full"] } # ethers often needs tokio
+
+[[bench]]
+name = "comparison"
+harness = false
