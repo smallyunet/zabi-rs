@@ -3,6 +3,44 @@ use crate::types::{ZAddress, ZU256, ZBytes, ZBool, ZString, ZArray};
 use core::str;
 use core::convert::TryInto;
 
+/// Read the 4-byte function selector from calldata.
+/// Returns a reference to the first 4 bytes.
+/// 
+/// # Example
+/// ```
+/// use zabi_rs::decoder::read_selector;
+/// 
+/// let calldata = [0xde, 0xad, 0xbe, 0xef, 0x00, 0x00];
+/// let selector = read_selector(&calldata).unwrap();
+/// assert_eq!(selector, &[0xde, 0xad, 0xbe, 0xef]);
+/// ```
+#[inline]
+pub fn read_selector(data: &[u8]) -> Result<&[u8; 4], ZError> {
+    if data.len() < 4 {
+        return Err(ZError::OutOfBounds(4, data.len()));
+    }
+    Ok(data[0..4].try_into().unwrap())
+}
+
+/// Returns the calldata without the 4-byte selector.
+/// Useful for passing the remaining data to tuple decoders.
+/// 
+/// # Example
+/// ```
+/// use zabi_rs::decoder::skip_selector;
+/// 
+/// let calldata = [0xde, 0xad, 0xbe, 0xef, 0x01, 0x02, 0x03];
+/// let params = skip_selector(&calldata).unwrap();
+/// assert_eq!(params, &[0x01, 0x02, 0x03]);
+/// ```
+#[inline]
+pub fn skip_selector(data: &[u8]) -> Result<&[u8], ZError> {
+    if data.len() < 4 {
+        return Err(ZError::OutOfBounds(4, data.len()));
+    }
+    Ok(&data[4..])
+}
+
 /// Helper to read a 32-byte word from a slice at a given offset.
 /// Returns reference to the array to avoid copying.
 #[inline(always)]
@@ -47,10 +85,8 @@ pub fn read_int256(data: &[u8], offset: usize) -> Result<crate::types::ZInt256<'
 pub fn read_u8(data: &[u8], offset: usize) -> Result<u8, ZError> {
     let word = peek_word(data, offset)?;
     // Check padding (bytes 0..31 must be 0)
-    for i in 0..31 {
-        if word[i] != 0 {
-            return Err(ZError::Custom("u8 value invalid (high bits set)"));
-        }
+    if word.iter().take(31).any(|&b| b != 0) {
+        return Err(ZError::Custom("u8 value invalid (high bits set)"));
     }
     Ok(word[31])
 }
@@ -60,10 +96,8 @@ pub fn read_i8(data: &[u8], offset: usize) -> Result<i8, ZError> {
     let word = peek_word(data, offset)?;
     let val = word[31] as i8;
     let padding_byte = if val < 0 { 0xff } else { 0x00 };
-    for i in 0..31 {
-        if word[i] != padding_byte {
-            return Err(ZError::Custom("i8 value invalid (bad padding)"));
-        }
+    if word.iter().take(31).any(|&b| b != padding_byte) {
+        return Err(ZError::Custom("i8 value invalid (bad padding)"));
     }
     Ok(val)
 }

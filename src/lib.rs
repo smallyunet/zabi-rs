@@ -8,14 +8,50 @@ extern crate std;
 pub mod decoder;
 pub mod error;
 pub mod types;
+pub mod zbytes_fixed;
 
 pub use decoder::{
     read_address_from_word, read_u256, read_int256, read_bytes, read_bool, read_string, read_array_fixed, read_array_dyn,
     read_u8, read_u16, read_u32, read_u64, read_u128,
-    read_i8, read_i16, read_i32, read_i64, read_i128
+    read_i8, read_i16, read_i32, read_i64, read_i128,
+    read_selector, skip_selector
 };
 pub use error::ZError;
 pub use types::{ZAddress, ZU256, ZInt256, ZBytes, ZBool, ZString, ZArray};
+pub use zbytes_fixed::{ZBytesN, read_bytes_n, read_bytes1, read_bytes4, read_bytes8, read_bytes20, read_bytes32};
+
+/// Decode a tuple of types from ABI-encoded data.
+/// 
+/// This macro decodes multiple values sequentially from ABI-encoded data,
+/// assuming each value occupies a 32-byte slot (head portion).
+/// 
+/// # Example
+/// ```
+/// use zabi_rs::{decode_tuple, ZU256, ZAddress, ZBool, ZDecode};
+/// 
+/// let mut data = [0u8; 96];
+/// data[31] = 1;  // uint256 = 1
+/// data[63] = 0xAA; // address (last byte)
+/// data[95] = 1;  // bool = true
+/// 
+/// let (a, b, c) = decode_tuple!(&data, ZU256, ZAddress, ZBool).unwrap();
+/// ```
+#[macro_export]
+macro_rules! decode_tuple {
+    ($data:expr, $($T:ty),+ $(,)?) => {{
+        let data: &[u8] = $data;
+        let mut offset: usize = 0;
+        (|| -> Result<($($T,)+), $crate::ZError> {
+            Ok((
+                $({
+                    let val = <$T as $crate::ZDecode>::decode(data, offset)?;
+                    offset += 32;
+                    val
+                },)+
+            ))
+        })()
+    }};
+}
 
 /// The main trait for zero-copy decoding.
 /// The main trait for zero-copy decoding.
@@ -242,7 +278,7 @@ mod tests {
         data.extend_from_slice(&w2);
 
         // 3. i8 = -1 (0xFF...FF)
-        let mut w3 = [0xff; 32];
+        let w3 = [0xff; 32];
         data.extend_from_slice(&w3);
 
         // 4. i8 = 1 (0x00...01)

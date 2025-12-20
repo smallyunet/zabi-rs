@@ -76,6 +76,20 @@ impl<'a> fmt::Display for ZAddress<'a> {
     }
 }
 
+impl<'a> ZAddress<'a> {
+    /// Copy the address bytes to a new [u8; 20] array.
+    #[inline]
+    pub fn to_bytes(&self) -> [u8; 20] {
+        *self.0
+    }
+
+    /// Returns the inner byte array reference.
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8; 20] {
+        self.0
+    }
+}
+
 /// Wrapper around a 32-byte EVM word (uint256) reference.
 #[derive(Clone, Copy, PartialEq)]
 pub struct ZU256<'a>(pub &'a [u8; 32]);
@@ -97,6 +111,56 @@ impl<'a> fmt::Display for ZU256<'a> {
             write!(f, "{:02x}", byte)?;
         }
         Ok(())
+    }
+}
+
+impl<'a> ZU256<'a> {
+    /// Convert to u128 if the value fits (upper 16 bytes are zero).
+    /// Returns None if the value overflows u128.
+    #[inline]
+    pub fn to_u128(&self) -> Option<u128> {
+        // Check if upper 16 bytes are zero
+        for i in 0..16 {
+            if self.0[i] != 0 {
+                return None;
+            }
+        }
+        let mut bytes = [0u8; 16];
+        bytes.copy_from_slice(&self.0[16..32]);
+        Some(u128::from_be_bytes(bytes))
+    }
+
+    /// Convert to u64 if the value fits (upper 24 bytes are zero).
+    /// Returns None if the value overflows u64.
+    #[inline]
+    pub fn to_u64(&self) -> Option<u64> {
+        // Check if upper 24 bytes are zero
+        for i in 0..24 {
+            if self.0[i] != 0 {
+                return None;
+            }
+        }
+        let mut bytes = [0u8; 8];
+        bytes.copy_from_slice(&self.0[24..32]);
+        Some(u64::from_be_bytes(bytes))
+    }
+
+    /// Returns the inner byte array reference.
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        self.0
+    }
+
+    /// Copy the bytes to a new [u8; 32] array.
+    #[inline]
+    pub fn to_bytes(&self) -> [u8; 32] {
+        *self.0
+    }
+
+    /// Check if the value is zero.
+    #[inline]
+    pub fn is_zero(&self) -> bool {
+        self.0.iter().all(|&b| b == 0)
     }
 }
 
@@ -123,6 +187,57 @@ impl<'a> fmt::Display for ZInt256<'a> {
             write!(f, "{:02x}", byte)?;
         }
         Ok(())
+    }
+}
+
+impl<'a> ZInt256<'a> {
+    /// Convert to i128 if the value fits.
+    /// Returns None if the value overflows i128.
+    #[inline]
+    pub fn to_i128(&self) -> Option<i128> {
+        // For signed, check sign extension
+        let is_negative = self.0[0] & 0x80 != 0;
+        let expected_padding = if is_negative { 0xff } else { 0x00 };
+        
+        // Check if upper 16 bytes are proper sign extension
+        for i in 0..16 {
+            if self.0[i] != expected_padding {
+                return None;
+            }
+        }
+        let mut bytes = [0u8; 16];
+        bytes.copy_from_slice(&self.0[16..32]);
+        Some(i128::from_be_bytes(bytes))
+    }
+
+    /// Convert to i64 if the value fits.
+    /// Returns None if the value overflows i64.
+    #[inline]
+    pub fn to_i64(&self) -> Option<i64> {
+        let is_negative = self.0[0] & 0x80 != 0;
+        let expected_padding = if is_negative { 0xff } else { 0x00 };
+        
+        // Check if upper 24 bytes are proper sign extension
+        for i in 0..24 {
+            if self.0[i] != expected_padding {
+                return None;
+            }
+        }
+        let mut bytes = [0u8; 8];
+        bytes.copy_from_slice(&self.0[24..32]);
+        Some(i64::from_be_bytes(bytes))
+    }
+
+    /// Returns the inner byte array reference.
+    #[inline]
+    pub fn as_bytes(&self) -> &[u8; 32] {
+        self.0
+    }
+
+    /// Check if the value is negative (MSB is set).
+    #[inline]
+    pub fn is_negative(&self) -> bool {
+        self.0[0] & 0x80 != 0
     }
 }
 

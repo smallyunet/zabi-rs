@@ -4,7 +4,21 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 
 ## 🚀 Released
 
-### v0.0.3 - Primitives & Perf (Current)
+### v0.0.4 - Utilities & Convenience (Current)
+- [x] **Fixed-Size Bytes**:
+    - [x] `bytes1` to `bytes32` types (`ZBytesN<N>`).
+    - [x] Left-aligned decoding with padding validation.
+- [x] **Function Selector Parsing**:
+    - [x] `read_selector()` to extract 4-byte selector.
+    - [x] `skip_selector()` to get calldata without selector.
+- [x] **Tuple Decoding**:
+    - [x] `decode_tuple!` macro for decoding multiple types.
+- [x] **Type Conversion Helpers**:
+    - [x] `ZU256::to_u64()`, `ZU256::to_u128()`, `ZU256::is_zero()`.
+    - [x] `ZInt256::to_i64()`, `ZInt256::to_i128()`, `ZInt256::is_negative()`.
+    - [x] `ZAddress::to_bytes()`, `ZAddress::as_bytes()`.
+
+### v0.0.3 - Primitives & Perf
 - [x] **Integers**:
     - [x] Signed integers (`int8` to `int256`).
     - [x] Smaller unsigned integers (`uint8` to `uint128`).
@@ -29,8 +43,8 @@ Focus on reducing boilerplate and making the library easier to use.
     - `sol!` macro integration (e.g., `sol!("struct MyData { ... }")`) to generate Rust types from Solidity definitions.
 - [ ] **Nested Tuples**:
     - Support for decoding arbitrarily nested tuple types.
-- [ ] **Function Dispatch**:
-    - Helper to parse 4-byte selector and dispatch to decoders.
+- [x] **Function Dispatch**:
+    - ~~Helper to parse 4-byte selector and dispatch to decoders.~~ (Moved to v0.0.4)
 - [ ] **Event Decoding**:
     - Support for decoding Log topics and un-indexed data.
 
