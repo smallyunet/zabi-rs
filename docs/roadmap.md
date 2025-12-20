@@ -4,7 +4,21 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 
 ## 🚀 Released
 
-### v0.0.4 - Utilities & Convenience (Current)
+### v0.0.5 - Event Decoding & Helpers (Current)
+- [x] **Event/Log Decoding**:
+    - [x] `ZEventLog` struct for zero-copy event log handling.
+    - [x] `read_topic_u256()`, `read_topic_int256()`, `read_topic_address()`, `read_topic_bool()`.
+    - [x] Topic and data decoding with existing decoders.
+- [x] **Type Helpers**:
+    - [x] `ZU256::to_u32()` conversion method.
+    - [x] `ZBytes::len()`, `is_empty()`, `as_slice()`.
+    - [x] `ZString::len()`, `is_empty()`, `as_str()`.
+    - [x] `ZBool::as_bool()` accessor.
+- [x] **Fixed-Size Bytes Extensions**:
+    - [x] `read_bytes2`, `read_bytes3`, `read_bytes16` convenience functions.
+    - [x] `ZBytesN::to_bytes()` copy method.
+
+### v0.0.4 - Utilities & Convenience
 - [x] **Fixed-Size Bytes**:
     - [x] `bytes1` to `bytes32` types (`ZBytesN<N>`).
     - [x] Left-aligned decoding with padding validation.

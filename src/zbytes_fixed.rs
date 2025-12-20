@@ -30,6 +30,12 @@ impl<'a, const N: usize> ZBytesN<'a, N> {
     pub const fn is_empty(&self) -> bool {
         N == 0
     }
+
+    /// Copy the bytes to a new [u8; N] array.
+    #[inline]
+    pub fn to_bytes(&self) -> [u8; N] {
+        *self.0
+    }
 }
 
 impl<'a, const N: usize> fmt::Debug for ZBytesN<'a, N> {
@@ -99,6 +105,18 @@ pub fn read_bytes4(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 4>, ZError>
     read_bytes_n::<4>(data, offset)
 }
 
+/// Read bytes2 from ABI-encoded data.
+#[inline]
+pub fn read_bytes2(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 2>, ZError> {
+    read_bytes_n::<2>(data, offset)
+}
+
+/// Read bytes3 from ABI-encoded data.
+#[inline]
+pub fn read_bytes3(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 3>, ZError> {
+    read_bytes_n::<3>(data, offset)
+}
+
 /// Read bytes8 from ABI-encoded data.
 #[inline]
 pub fn read_bytes8(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 8>, ZError> {
@@ -110,6 +128,12 @@ pub fn read_bytes8(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 8>, ZError>
 #[inline]
 pub fn read_bytes20(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 20>, ZError> {
     read_bytes_n::<20>(data, offset)
+}
+
+/// Read bytes16 from ABI-encoded data.
+#[inline]
+pub fn read_bytes16(data: &[u8], offset: usize) -> Result<ZBytesN<'_, 16>, ZError> {
+    read_bytes_n::<16>(data, offset)
 }
 
 /// Read bytes32 from ABI-encoded data.

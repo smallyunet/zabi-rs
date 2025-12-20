@@ -162,6 +162,21 @@ impl<'a> ZU256<'a> {
     pub fn is_zero(&self) -> bool {
         self.0.iter().all(|&b| b == 0)
     }
+
+    /// Convert to u32 if the value fits (upper 28 bytes are zero).
+    /// Returns None if the value overflows u32.
+    #[inline]
+    pub fn to_u32(&self) -> Option<u32> {
+        // Check if upper 28 bytes are zero
+        for i in 0..28 {
+            if self.0[i] != 0 {
+                return None;
+            }
+        }
+        let mut bytes = [0u8; 4];
+        bytes.copy_from_slice(&self.0[28..32]);
+        Some(u32::from_be_bytes(bytes))
+    }
 }
 
 /// Wrapper around a 32-byte EVM word (int256) reference.
@@ -269,6 +284,26 @@ impl<'a> fmt::Display for ZBytes<'a> {
     }
 }
 
+impl<'a> ZBytes<'a> {
+    /// Returns the length of the bytes.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Returns true if the bytes are empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Returns the inner byte slice.
+    #[inline]
+    pub fn as_slice(&self) -> &[u8] {
+        self.0
+    }
+}
+
 /// Wrapper around a boolean value.
 /// Note: EVM booleans are uint256 (0 or 1).
 #[derive(Clone, Copy, PartialEq)]
@@ -286,6 +321,14 @@ impl fmt::Display for ZBool {
     }
 }
 
+impl ZBool {
+    /// Returns the inner boolean value.
+    #[inline]
+    pub fn as_bool(&self) -> bool {
+        self.0
+    }
+}
+
 /// Wrapper around a UTF-8 string slice reference.
 #[derive(Clone, Copy, PartialEq)]
 pub struct ZString<'a>(pub &'a str);
@@ -299,5 +342,25 @@ impl<'a> fmt::Debug for ZString<'a> {
 impl<'a> fmt::Display for ZString<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
+    }
+}
+
+impl<'a> ZString<'a> {
+    /// Returns the length of the string in bytes.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Returns true if the string is empty.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Returns the inner string slice.
+    #[inline]
+    pub fn as_str(&self) -> &str {
+        self.0
     }
 }

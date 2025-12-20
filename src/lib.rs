@@ -7,6 +7,7 @@ extern crate std;
 
 pub mod decoder;
 pub mod error;
+pub mod event;
 pub mod types;
 pub mod zbytes_fixed;
 
@@ -18,7 +19,8 @@ pub use decoder::{
 };
 pub use error::ZError;
 pub use types::{ZAddress, ZU256, ZInt256, ZBytes, ZBool, ZString, ZArray};
-pub use zbytes_fixed::{ZBytesN, read_bytes_n, read_bytes1, read_bytes4, read_bytes8, read_bytes20, read_bytes32};
+pub use zbytes_fixed::{ZBytesN, read_bytes_n, read_bytes1, read_bytes2, read_bytes3, read_bytes4, read_bytes8, read_bytes16, read_bytes20, read_bytes32};
+pub use event::{ZEventLog, read_topic_u256, read_topic_int256, read_topic_address, read_topic_bool};
 
 /// Decode a tuple of types from ABI-encoded data.
 /// 
