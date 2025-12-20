@@ -64,3 +64,7 @@ cargo test
 ## License
 
 MIT
+
+## Roadmap
+See [docs/roadmap.md](docs/roadmap.md) for future plans.
+
