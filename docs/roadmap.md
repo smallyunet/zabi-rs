@@ -47,20 +47,17 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 - [x] **Decoder Improvements**:
     - [x] Offset-based decoding logic updates.
 
-### v0.3.0 - Ergonomics & Developer Experience
-Focus on reducing boilerplate and making the library easier to use.
-
-- [ ] **Derive Macros**:
-    - Implement `#[derive(ZDecode)]` to auto-generate struct wrappers and decoding logic.
-    - Support for nested structs and complex schemas.
-- [ ] **Solidity Compatibility**:
-    - `sol!` macro integration (e.g., `sol!("struct MyData { ... }")`) to generate Rust types from Solidity definitions.
-- [ ] **Nested Tuples**:
-    - Support for decoding arbitrarily nested tuple types.
-- [x] **Function Dispatch**:
-    - ~~Helper to parse 4-byte selector and dispatch to decoders.~~ (Moved to v0.0.4)
-- [ ] **Event Decoding**:
-    - Support for decoding Log topics and un-indexed data.
+### v0.0.6 - Core Enhancements (DONE)
+- [x] **Derive Macros**:
+    - `#[derive(ZDecode)]` for structs.
+- [x] **Tuple Support**:
+    - `ZDecode` for tuples up to 12 elements.
+- [x] **Nested Types**:
+    - Support for nested structs and tuples in decoding.
+- [x] **HEAD_SIZE trait member**:
+    - For proper offset management in nested structures.
+- [x] **Extended Conversions**:
+    - More `to_xxx()` helpers for integer types.
 
 ### v1.0.0 - Production Readiness
 Focus on stability, security, and proven performance.

@@ -177,6 +177,18 @@ impl<'a> ZU256<'a> {
         bytes.copy_from_slice(&self.0[28..32]);
         Some(u32::from_be_bytes(bytes))
     }
+
+    /// Convert to u16 if the value fits.
+    #[inline]
+    pub fn to_u16(&self) -> Option<u16> {
+        self.to_u32().and_then(|v| v.try_into().ok())
+    }
+
+    /// Convert to u8 if the value fits.
+    #[inline]
+    pub fn to_u8(&self) -> Option<u8> {
+        self.to_u32().and_then(|v| v.try_into().ok())
+    }
 }
 
 /// Wrapper around a 32-byte EVM word (int256) reference.
@@ -253,6 +265,33 @@ impl<'a> ZInt256<'a> {
     #[inline]
     pub fn is_negative(&self) -> bool {
         self.0[0] & 0x80 != 0
+    }
+
+    /// Convert to i32 if the value fits.
+    #[inline]
+    pub fn to_i32(&self) -> Option<i32> {
+        let is_negative = self.is_negative();
+        let expected_padding = if is_negative { 0xff } else { 0x00 };
+        for i in 0..28 {
+            if self.0[i] != expected_padding {
+                return None;
+            }
+        }
+        let mut bytes = [0u8; 4];
+        bytes.copy_from_slice(&self.0[28..32]);
+        Some(i32::from_be_bytes(bytes))
+    }
+
+    /// Convert to i16 if the value fits.
+    #[inline]
+    pub fn to_i16(&self) -> Option<i16> {
+        self.to_i32().and_then(|v| v.try_into().ok())
+    }
+
+    /// Convert to i8 if the value fits.
+    #[inline]
+    pub fn to_i8(&self) -> Option<i8> {
+        self.to_i32().and_then(|v| v.try_into().ok())
     }
 }
 

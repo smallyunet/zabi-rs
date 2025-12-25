@@ -22,6 +22,9 @@ pub use types::{ZAddress, ZU256, ZInt256, ZBytes, ZBool, ZString, ZArray};
 pub use zbytes_fixed::{ZBytesN, read_bytes_n, read_bytes1, read_bytes2, read_bytes3, read_bytes4, read_bytes8, read_bytes16, read_bytes20, read_bytes32};
 pub use event::{ZEventLog, read_topic_u256, read_topic_int256, read_topic_address, read_topic_bool};
 
+#[cfg(feature = "derive")]
+pub use zabi_derive::ZDecode;
+
 /// Decode a tuple of types from ABI-encoded data.
 /// 
 /// This macro decodes multiple values sequentially from ABI-encoded data,
@@ -58,28 +61,33 @@ macro_rules! decode_tuple {
 /// The main trait for zero-copy decoding.
 /// The main trait for zero-copy decoding.
 pub trait ZDecode<'a>: Sized {
+    const HEAD_SIZE: usize = 32; // Default for words and offsets
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError>;
 }
 
 impl<'a> ZDecode<'a> for ZU256<'a> {
+    const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         decoder::read_u256(data, offset)
     }
 }
 
 impl<'a> ZDecode<'a> for ZAddress<'a> {
+    const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         decoder::read_address_from_word(data, offset)
     }
 }
 
 impl<'a> ZDecode<'a> for ZBool {
+    const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         decoder::read_bool(data, offset)
     }
 }
 
 impl<'a> ZDecode<'a> for ZInt256<'a> {
+    const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         decoder::read_int256(data, offset)
     }
@@ -88,6 +96,7 @@ impl<'a> ZDecode<'a> for ZInt256<'a> {
 macro_rules! impl_zdecode_primitive {
     ($t:ty, $func:path) => {
         impl<'a> ZDecode<'a> for $t {
+            const HEAD_SIZE: usize = 32;
             fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
                 $func(data, offset)
             }
@@ -107,7 +116,53 @@ impl_zdecode_primitive!(i32, decoder::read_i32);
 impl_zdecode_primitive!(i64, decoder::read_i64);
 impl_zdecode_primitive!(i128, decoder::read_i128);
 
+impl<'a, T: ZDecode<'a>> ZDecode<'a> for ZArray<'a, T> {
+    const HEAD_SIZE: usize = 32;
+    fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
+        decoder::read_array_dyn(data, offset)
+    }
+}
+
+impl<'a, const N: usize> ZDecode<'a> for ZBytesN<'a, N> {
+    const HEAD_SIZE: usize = 32;
+    fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
+        zbytes_fixed::read_bytes_n(data, offset)
+    }
+}
+
+macro_rules! impl_zdecode_tuple {
+    ($($T:ident),+) => {
+        impl<'a, $($T: ZDecode<'a>),+> ZDecode<'a> for ($($T,)+) {
+            const HEAD_SIZE: usize = 0 $(+ <$T as ZDecode>::HEAD_SIZE)*;
+            fn decode(data: &'a [u8], mut offset: usize) -> Result<Self, ZError> {
+                #[allow(unused_assignments)]
+                Ok((
+                    $({
+                        let val = <$T as ZDecode>::decode(data, offset)?;
+                        offset += <$T as ZDecode>::HEAD_SIZE;
+                        val
+                    },)+
+                ))
+            }
+        }
+    };
+}
+
+impl_zdecode_tuple!(T1);
+impl_zdecode_tuple!(T1, T2);
+impl_zdecode_tuple!(T1, T2, T3);
+impl_zdecode_tuple!(T1, T2, T3, T4);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7, T8);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11);
+impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12);
+
 impl<'a> ZDecode<'a> for ZString<'a> {
+    const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         decoder::read_string(data, offset)
     }
