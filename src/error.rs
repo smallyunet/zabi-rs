@@ -11,8 +11,12 @@ pub enum ZError {
 impl fmt::Display for ZError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ZError::InvalidLength(expected, actual) => write!(f, "Invalid length: expected {}, got {}", expected, actual),
-            ZError::OutOfBounds(idx, len) => write!(f, "Index out of bounds: index {}, len {}", idx, len),
+            ZError::InvalidLength(expected, actual) => {
+                write!(f, "Invalid length: expected {}, got {}", expected, actual)
+            }
+            ZError::OutOfBounds(idx, len) => {
+                write!(f, "Index out of bounds: index {}, len {}", idx, len)
+            }
             ZError::InvalidUtf8 => write!(f, "Invalid UTF-8 sequence"),
             ZError::Custom(msg) => write!(f, "Error: {}", msg),
         }

@@ -2,7 +2,7 @@ extern crate proc_macro;
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Data, Fields};
+use syn::{parse_macro_input, Data, DeriveInput, Fields};
 
 #[proc_macro_derive(ZDecode)]
 pub fn zabi_decode_derive(input: TokenStream) -> TokenStream {
@@ -11,70 +11,68 @@ pub fn zabi_decode_derive(input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     let decode_body = match input.data {
-        Data::Struct(data) => {
-            match data.fields {
-                Fields::Named(fields) => {
-                    let field_recurse = fields.named.iter().map(|f| {
-                        let name = &f.ident;
-                        let ty = &f.ty;
-                        quote! {
-                            #name: {
-                                let val = <#ty as ::zabi_rs::ZDecode>::decode(data, offset)?;
-                                offset += <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE;
-                                val
-                            }
-                        }
-                    });
-                    let head_size_recurse = fields.named.iter().map(|f| {
-                        let ty = &f.ty;
-                        quote! { <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE }
-                    });
-                    
+        Data::Struct(data) => match data.fields {
+            Fields::Named(fields) => {
+                let field_recurse = fields.named.iter().map(|f| {
+                    let name = &f.ident;
+                    let ty = &f.ty;
                     quote! {
-                        const HEAD_SIZE: usize = 0 #(+ #head_size_recurse)*;
-                        fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
-                            let mut offset = offset;
-                            Ok(#name {
-                                #(#field_recurse),*
-                            })
+                        #name: {
+                            let val = <#ty as ::zabi_rs::ZDecode>::decode(data, offset)?;
+                            offset += <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE;
+                            val
                         }
                     }
-                }
-                Fields::Unnamed(fields) => {
-                    let field_recurse = fields.unnamed.iter().map(|f| {
-                        let ty = &f.ty;
-                        quote! {
-                            {
-                                let val = <#ty as ::zabi_rs::ZDecode>::decode(data, offset)?;
-                                offset += <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE;
-                                val
-                            }
-                        }
-                    });
-                    let head_size_recurse = fields.unnamed.iter().map(|f| {
-                        let ty = &f.ty;
-                        quote! { <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE }
-                    });
-                    quote! {
-                        const HEAD_SIZE: usize = 0 #(+ #head_size_recurse)*;
-                        fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
-                            let mut offset = offset;
-                            Ok(#name (
-                                #(#field_recurse),*
-                            ))
-                        }
-                    }
-                }
-                Fields::Unit => {
-                    quote! { 
-                        const HEAD_SIZE: usize = 0;
-                        fn decode(data: &'a [u8], _offset: usize) -> Result<Self, ::zabi_rs::ZError> {
-                            Ok(#name)
-                        }
+                });
+                let head_size_recurse = fields.named.iter().map(|f| {
+                    let ty = &f.ty;
+                    quote! { <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE }
+                });
+
+                quote! {
+                    const HEAD_SIZE: usize = 0 #(+ #head_size_recurse)*;
+                    fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
+                        let mut offset = offset;
+                        Ok(#name {
+                            #(#field_recurse),*
+                        })
                     }
                 }
             }
-        }
+            Fields::Unnamed(fields) => {
+                let field_recurse = fields.unnamed.iter().map(|f| {
+                    let ty = &f.ty;
+                    quote! {
+                        {
+                            let val = <#ty as ::zabi_rs::ZDecode>::decode(data, offset)?;
+                            offset += <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE;
+                            val
+                        }
+                    }
+                });
+                let head_size_recurse = fields.unnamed.iter().map(|f| {
+                    let ty = &f.ty;
+                    quote! { <#ty as ::zabi_rs::ZDecode>::HEAD_SIZE }
+                });
+                quote! {
+                    const HEAD_SIZE: usize = 0 #(+ #head_size_recurse)*;
+                    fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
+                        let mut offset = offset;
+                        Ok(#name (
+                            #(#field_recurse),*
+                        ))
+                    }
+                }
+            }
+            Fields::Unit => {
+                quote! {
+                    const HEAD_SIZE: usize = 0;
+                    fn decode(data: &'a [u8], _offset: usize) -> Result<Self, ::zabi_rs::ZError> {
+                        Ok(#name)
+                    }
+                }
+            }
+        },
         _ => panic!("ZDecode can only be derived for structs"),
     };
 

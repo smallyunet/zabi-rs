@@ -1,11 +1,11 @@
 //! Fixed-size bytes types (bytes1 to bytes32).
-//! 
+//!
 //! Unlike dynamic `bytes`, fixed-size bytes are left-aligned in the 32-byte word.
 //! Common uses include function selectors (bytes4) and storage keys (bytes32).
 
-use core::fmt;
-use core::convert::TryInto;
 use crate::error::ZError;
+use core::convert::TryInto;
+use core::fmt;
 
 /// Wrapper for fixed-size bytes (bytes1 to bytes32).
 /// The bytes are left-aligned in the 32-byte EVM word.
@@ -65,7 +65,9 @@ fn peek_word(data: &[u8], offset: usize) -> Result<&[u8; 32], ZError> {
         return Err(ZError::OutOfBounds(offset + 32, data.len()));
     }
     let slice = &data[offset..offset + 32];
-    let array_ref: &[u8; 32] = slice.try_into().map_err(|_| ZError::Custom("Slice conversion failed"))?;
+    let array_ref: &[u8; 32] = slice
+        .try_into()
+        .map_err(|_| ZError::Custom("Slice conversion failed"))?;
     Ok(array_ref)
 }
 
@@ -73,22 +75,27 @@ fn peek_word(data: &[u8], offset: usize) -> Result<&[u8; 32], ZError> {
 /// Fixed-size bytes are left-aligned in the 32-byte word.
 /// The remaining bytes must be zero-padded.
 #[inline]
-pub fn read_bytes_n<'a, const N: usize>(data: &'a [u8], offset: usize) -> Result<ZBytesN<'a, N>, ZError> {
+pub fn read_bytes_n<'a, const N: usize>(
+    data: &'a [u8],
+    offset: usize,
+) -> Result<ZBytesN<'a, N>, ZError> {
     if N == 0 || N > 32 {
         return Err(ZError::Custom("bytesN size must be between 1 and 32"));
     }
-    
+
     let word = peek_word(data, offset)?;
-    
+
     // Check that trailing bytes are zero (right-padded)
     if word.iter().skip(N).any(|&b| b != 0) {
         return Err(ZError::Custom("bytesN has non-zero padding bytes"));
     }
-    
+
     // Get reference to the first N bytes
     let bytes_slice = &data[offset..offset + N];
-    let bytes_ref: &[u8; N] = bytes_slice.try_into().map_err(|_| ZError::Custom("bytesN slice conversion failed"))?;
-    
+    let bytes_ref: &[u8; N] = bytes_slice
+        .try_into()
+        .map_err(|_| ZError::Custom("bytesN slice conversion failed"))?;
+
     Ok(ZBytesN(bytes_ref))
 }
 

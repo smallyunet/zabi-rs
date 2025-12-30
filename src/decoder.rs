@@ -1,15 +1,15 @@
 use crate::error::ZError;
-use crate::types::{ZAddress, ZU256, ZBytes, ZBool, ZString, ZArray};
-use core::str;
+use crate::types::{ZAddress, ZArray, ZBool, ZBytes, ZString, ZU256};
 use core::convert::TryInto;
+use core::str;
 
 /// Read the 4-byte function selector from calldata.
 /// Returns a reference to the first 4 bytes.
-/// 
+///
 /// # Example
 /// ```
 /// use zabi_rs::decoder::read_selector;
-/// 
+///
 /// let calldata = [0xde, 0xad, 0xbe, 0xef, 0x00, 0x00];
 /// let selector = read_selector(&calldata).unwrap();
 /// assert_eq!(selector, &[0xde, 0xad, 0xbe, 0xef]);
@@ -24,11 +24,11 @@ pub fn read_selector(data: &[u8]) -> Result<&[u8; 4], ZError> {
 
 /// Returns the calldata without the 4-byte selector.
 /// Useful for passing the remaining data to tuple decoders.
-/// 
+///
 /// # Example
 /// ```
 /// use zabi_rs::decoder::skip_selector;
-/// 
+///
 /// let calldata = [0xde, 0xad, 0xbe, 0xef, 0x01, 0x02, 0x03];
 /// let params = skip_selector(&calldata).unwrap();
 /// assert_eq!(params, &[0x01, 0x02, 0x03]);
@@ -53,9 +53,11 @@ pub fn peek_word(data: &[u8], offset: usize) -> Result<&[u8; 32], ZError> {
     // Note: slice.as_ptr() returns *const u8.
     // We strictly use normal safe Rust usually, specifically `try_into`.
     // But to ensure zero-copy and 'reference' semantics, we rely on slice conversion.
-    
+
     let slice = &data[offset..offset + 32];
-    let array_ref: &[u8; 32] = slice.try_into().map_err(|_| ZError::Custom("Slice conversion failed"))?;
+    let array_ref: &[u8; 32] = slice
+        .try_into()
+        .map_err(|_| ZError::Custom("Slice conversion failed"))?;
     Ok(array_ref)
 }
 
@@ -65,7 +67,9 @@ pub fn read_address_from_word(data: &[u8], offset: usize) -> Result<ZAddress<'_>
     let word = peek_word(data, offset)?;
     // Address is the last 20 bytes of the 32-byte word.
     let addr_slice = &word[12..32];
-    let addr_ref: &[u8; 20] = addr_slice.try_into().map_err(|_| ZError::Custom("Address slice conversion failed"))?;
+    let addr_ref: &[u8; 20] = addr_slice
+        .try_into()
+        .map_err(|_| ZError::Custom("Address slice conversion failed"))?;
     Ok(ZAddress(addr_ref))
 }
 
@@ -189,12 +193,12 @@ pub fn read_bool(data: &[u8], offset: usize) -> Result<ZBool, ZError> {
     // Bool is uint256, last byte is 0 or 1.
     // We should check that all other bytes are 0?
     // Solidity requires clean high bits.
-    
+
     let is_zero = word[0..31].iter().all(|&b| b == 0);
     if !is_zero {
         return Err(ZError::Custom("Boolean value has dirty high bits"));
     }
-    
+
     match word[31] {
         0 => Ok(ZBool(false)),
         1 => Ok(ZBool(true)),
@@ -209,11 +213,11 @@ pub fn read_bytes(data: &[u8], initial_offset: usize) -> Result<ZBytes<'_>, ZErr
     // 1. Read the relative offset from the head.
     let offset_word = peek_word(data, initial_offset)?;
     let data_offset_usize = usize::from_be_bytes(offset_word[24..32].try_into().unwrap()); // Last 8 bytes for usize is safe assumption for now < 2^64
-    
-    // ABI encoding offsets are usually absolute from the start of the encoded tuple? 
+
+    // ABI encoding offsets are usually absolute from the start of the encoded tuple?
     // Wait, in dynamic types, the value in the "static" part is the offset from the START of the current encoding.
     // If we assume `data` is the full encoding block.
-    
+
     if data_offset_usize >= data.len() {
         return Err(ZError::OutOfBounds(data_offset_usize, data.len()));
     }
@@ -225,11 +229,11 @@ pub fn read_bytes(data: &[u8], initial_offset: usize) -> Result<ZBytes<'_>, ZErr
     // 3. Read the actual data bytes.
     let start = data_offset_usize + 32;
     let end = start + length;
-    
+
     if end > data.len() {
         return Err(ZError::OutOfBounds(end, data.len()));
     }
-    
+
     Ok(ZBytes(&data[start..end]))
 }
 
@@ -239,7 +243,11 @@ pub fn read_string(data: &[u8], initial_offset: usize) -> Result<ZString<'_>, ZE
     Ok(ZString(s))
 }
 
-pub fn read_array_fixed<'a, T>(data: &'a [u8], offset: usize, length: usize) -> Result<ZArray<'a, T>, ZError> {
+pub fn read_array_fixed<'a, T>(
+    data: &'a [u8],
+    offset: usize,
+    length: usize,
+) -> Result<ZArray<'a, T>, ZError> {
     // Basic bounds check for the whole block
     let end = offset + length * 32;
     if end > data.len() {
@@ -248,12 +256,15 @@ pub fn read_array_fixed<'a, T>(data: &'a [u8], offset: usize, length: usize) -> 
     Ok(ZArray::new(data, offset, length))
 }
 
-pub fn read_array_dyn<'a, T>(data: &'a [u8], initial_offset: usize) -> Result<ZArray<'a, T>, ZError> {
+pub fn read_array_dyn<'a, T>(
+    data: &'a [u8],
+    initial_offset: usize,
+) -> Result<ZArray<'a, T>, ZError> {
     // 1. Read offset to array (relative to current position in tuple, usually passed as offset 0?)
     // No, initial_offset points to the 'Head' word containing the offset.
     let offset_word = peek_word(data, initial_offset)?;
     let data_offset_usize = usize::from_be_bytes(offset_word[24..32].try_into().unwrap());
-    
+
     if data_offset_usize >= data.len() {
         return Err(ZError::OutOfBounds(data_offset_usize, data.len()));
     }
@@ -264,7 +275,7 @@ pub fn read_array_dyn<'a, T>(data: &'a [u8], initial_offset: usize) -> Result<ZA
 
     // 3. Start of data is 32 bytes after the length word
     let start_offset = data_offset_usize + 32;
-    
+
     // Bounds check?
     // start_offset + length * 32
     if start_offset + length * 32 > data.len() {

@@ -12,33 +12,37 @@ pub mod types;
 pub mod zbytes_fixed;
 
 pub use decoder::{
-    read_address_from_word, read_u256, read_int256, read_bytes, read_bool, read_string, read_array_fixed, read_array_dyn,
-    read_u8, read_u16, read_u32, read_u64, read_u128,
-    read_i8, read_i16, read_i32, read_i64, read_i128,
-    read_selector, skip_selector
+    read_address_from_word, read_array_dyn, read_array_fixed, read_bool, read_bytes, read_i128,
+    read_i16, read_i32, read_i64, read_i8, read_int256, read_selector, read_string, read_u128,
+    read_u16, read_u256, read_u32, read_u64, read_u8, skip_selector,
 };
 pub use error::ZError;
-pub use types::{ZAddress, ZU256, ZInt256, ZBytes, ZBool, ZString, ZArray};
-pub use zbytes_fixed::{ZBytesN, read_bytes_n, read_bytes1, read_bytes2, read_bytes3, read_bytes4, read_bytes8, read_bytes16, read_bytes20, read_bytes32};
-pub use event::{ZEventLog, read_topic_u256, read_topic_int256, read_topic_address, read_topic_bool};
+pub use event::{
+    read_topic_address, read_topic_bool, read_topic_int256, read_topic_u256, ZEventLog,
+};
+pub use types::{ZAddress, ZArray, ZBool, ZBytes, ZInt256, ZString, ZU256};
+pub use zbytes_fixed::{
+    read_bytes1, read_bytes16, read_bytes2, read_bytes20, read_bytes3, read_bytes32, read_bytes4,
+    read_bytes8, read_bytes_n, ZBytesN,
+};
 
 #[cfg(feature = "derive")]
 pub use zabi_derive::ZDecode;
 
 /// Decode a tuple of types from ABI-encoded data.
-/// 
+///
 /// This macro decodes multiple values sequentially from ABI-encoded data,
 /// assuming each value occupies a 32-byte slot (head portion).
-/// 
+///
 /// # Example
 /// ```
 /// use zabi_rs::{decode_tuple, ZU256, ZAddress, ZBool, ZDecode};
-/// 
+///
 /// let mut data = [0u8; 96];
 /// data[31] = 1;  // uint256 = 1
 /// data[63] = 0xAA; // address (last byte)
 /// data[95] = 1;  // bool = true
-/// 
+///
 /// let (a, b, c) = decode_tuple!(&data, ZU256, ZAddress, ZBool).unwrap();
 /// ```
 #[macro_export]
@@ -179,19 +183,19 @@ mod tests {
         // Signature: (uint256, address)
         // 1. uint256: 0x...01 (32 bytes)
         // 2. address: 0x... (padded to 32 bytes)
-        
+
         let mut data = Vec::new();
-        
+
         // Param 1: uint256 = 1
         let mut p1 = [0u8; 32];
         p1[31] = 1;
         data.extend_from_slice(&p1);
-        
+
         // Param 2: address = 0x1122334455667788990011223344556677889900
         let mut p2 = [0u8; 32];
         let addr_bytes = [
-            0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00,
-            0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00
+            0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0x00, 0x11, 0x22, 0x33, 0x44,
+            0x55, 0x66, 0x77, 0x88, 0x99, 0x00,
         ];
         p2[12..32].copy_from_slice(&addr_bytes);
         data.extend_from_slice(&p2);
@@ -203,9 +207,9 @@ mod tests {
         // Check values
         assert_eq!(decoded_u256.0[31], 1);
         assert_eq!(decoded_u256.0[0], 0);
-        
+
         assert_eq!(decoded_addr.0, &addr_bytes);
-        
+
         // Ensure they are truly references into `data`
         // We can check pointer distance if we were unsafe, but logically they must be
         // because the types define lifetimes tied to input.
@@ -228,13 +232,13 @@ mod tests {
         // - Offset to data (from start)
         // - Length of string
         // - String data (padded to 32 bytes)
-        
+
         // Offset is 64 (32 bytes for bool + 32 bytes for the offset itself? No.)
         // Tuple: (bool, string)
         // Head:
         // [0..32]: bool value
         // [32..64]: offset to string data (relative to start of tuple)
-        
+
         // Offset should be 64 (32 bytes bool + 32 bytes offset word)
         let mut p2_offset = [0u8; 32];
         p2_offset[31] = 64;
@@ -256,14 +260,13 @@ mod tests {
         let val_bool = read_bool(&data, 0).expect("failed bool");
         let val_str = read_string(&data, 32).expect("failed string");
 
-
         assert_eq!(val_bool.0, true);
         assert_eq!(val_str.0, "Hello");
     }
 
     #[test]
     fn test_array_decoding() {
-        use crate::decoder::{read_array_fixed, read_array_dyn};
+        use crate::decoder::{read_array_dyn, read_array_fixed};
         use crate::types::ZU256;
 
         // 1. Fixed Array: uint256[2] = [1, 2]
@@ -278,7 +281,8 @@ mod tests {
         data.extend_from_slice(&p1);
 
         // Decode
-        let arr_fixed: crate::types::ZArray<ZU256> = read_array_fixed(&data, 0, 2).expect("fixed array");
+        let arr_fixed: crate::types::ZArray<ZU256> =
+            read_array_fixed(&data, 0, 2).expect("fixed array");
         assert_eq!(arr_fixed.len(), 2);
         assert_eq!(arr_fixed.get(0).unwrap().0[31], 1);
         assert_eq!(arr_fixed.get(1).unwrap().0[31], 2);
@@ -286,7 +290,7 @@ mod tests {
         // 2. Dynamic Array: uint256[] = [3, 4]
         // Encoded as: Offset (head) -> Length -> Elements
         let mut dyn_data = Vec::new();
-        
+
         // Offset to data (32 bytes)
         let mut offset_word = [0u8; 32];
         offset_word[31] = 32; // Data starts at offset 32
@@ -352,7 +356,7 @@ mod tests {
         // Test Decode
         assert_eq!(read_u8(&data, 0).unwrap(), 0xFF);
         assert_eq!(read_u64(&data, 32).unwrap(), 0xDEADBEEF);
-        
+
         assert_eq!(read_i8(&data, 64).unwrap(), -1);
         assert_eq!(read_i8(&data, 96).unwrap(), 1);
 

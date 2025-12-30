@@ -6,9 +6,9 @@
 //!
 //! This module provides zero-copy decoding for both.
 
-use core::convert::TryInto;
 use crate::error::ZError;
-use crate::types::{ZAddress, ZU256, ZInt256};
+use crate::types::{ZAddress, ZInt256, ZU256};
+use core::convert::TryInto;
 
 /// Wrapper for Ethereum event log data.
 /// Provides access to topics and non-indexed data.
@@ -74,7 +74,8 @@ impl<'a> ZEventLog<'a> {
     pub fn topic_as_address(&self, index: usize) -> Result<ZAddress<'a>, ZError> {
         let topic = self.raw_topic(index)?;
         let addr_slice = &topic[12..32];
-        let addr_ref: &[u8; 20] = addr_slice.try_into()
+        let addr_ref: &[u8; 20] = addr_slice
+            .try_into()
             .map_err(|_| ZError::Custom("Address slice conversion failed"))?;
         Ok(ZAddress(addr_ref))
     }
@@ -107,7 +108,8 @@ pub fn read_topic_int256<'a>(topic: &'a [u8; 32]) -> ZInt256<'a> {
 #[inline]
 pub fn read_topic_address(topic: &[u8; 32]) -> Result<ZAddress<'_>, ZError> {
     let addr_slice = &topic[12..32];
-    let addr_ref: &[u8; 20] = addr_slice.try_into()
+    let addr_ref: &[u8; 20] = addr_slice
+        .try_into()
         .map_err(|_| ZError::Custom("Address slice conversion failed"))?;
     Ok(ZAddress(addr_ref))
 }
@@ -138,21 +140,21 @@ mod tests {
         // Create sample topics
         let mut topic0 = [0u8; 32];
         topic0[0] = 0xde; // Event signature
-        
+
         let mut topic1 = [0u8; 32];
         topic1[31] = 0x01; // uint256(1)
-        
+
         let topics: Vec<&[u8; 32]> = alloc::vec![&topic0, &topic1];
         let data = [0u8; 64];
-        
+
         let event = ZEventLog::new(&topics, &data);
-        
+
         assert_eq!(event.topic_count(), 2);
         assert_eq!(event.data().len(), 64);
-        
+
         let sig = event.event_signature().unwrap();
         assert_eq!(sig[0], 0xde);
-        
+
         let val = event.topic_as_u256(1).unwrap();
         assert_eq!(val.0[31], 0x01);
     }
@@ -164,7 +166,7 @@ mod tests {
         for i in 12..32 {
             topic[i] = (i - 11) as u8;
         }
-        
+
         let addr = read_topic_address(&topic).unwrap();
         assert_eq!(addr.0[0], 1);
         assert_eq!(addr.0[19], 20);
@@ -175,10 +177,10 @@ mod tests {
         let mut topic_true = [0u8; 32];
         topic_true[31] = 1;
         assert_eq!(read_topic_bool(&topic_true).unwrap(), true);
-        
+
         let topic_false = [0u8; 32];
         assert_eq!(read_topic_bool(&topic_false).unwrap(), false);
-        
+
         let mut topic_invalid = [0u8; 32];
         topic_invalid[31] = 2;
         assert!(read_topic_bool(&topic_invalid).is_err());
@@ -189,19 +191,21 @@ mod tests {
         // Simulate event with data: (uint256(42), address(...))
         let topic0 = [0u8; 32];
         let topics: Vec<&[u8; 32]> = alloc::vec![&topic0];
-        
+
         let mut data = [0u8; 64];
         data[31] = 42; // uint256(42)
         data[63] = 0xAA; // address last byte
-        
+
         let event = ZEventLog::new(&topics, &data);
-        
+
         // Decode uint256 at offset 0
         let val = event.decode_data(0, crate::decoder::read_u256).unwrap();
         assert_eq!(val.0[31], 42);
-        
+
         // Decode address at offset 32
-        let addr = event.decode_data(32, crate::decoder::read_address_from_word).unwrap();
+        let addr = event
+            .decode_data(32, crate::decoder::read_address_from_word)
+            .unwrap();
         assert_eq!(addr.0[19], 0xAA);
     }
 }

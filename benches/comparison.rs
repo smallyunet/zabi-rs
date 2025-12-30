@@ -1,8 +1,8 @@
+use alloy_sol_types::{sol, SolType};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use zabi_rs::{read_u256, read_address_from_word, read_bool, ZU256};
-use alloy_sol_types::{SolType, sol};
 use ethers::abi::AbiDecode;
 use ethers::types::U256 as EthersU256;
+use zabi_rs::{read_address_from_word, read_bool, read_u256, ZU256};
 
 // Define Sol types for Alloy
 sol! {
@@ -33,16 +33,17 @@ fn bench_uint256(c: &mut Criterion) {
     // uint256 is just a primitive, alloy usually decodes tuples or specific types via SolType
     group.bench_function("alloy", |b| {
         b.iter(|| {
-             let res = <alloy_sol_types::sol_data::Uint<256>>::abi_decode(black_box(&data), true).unwrap();
-             black_box(res);
+            let res =
+                <alloy_sol_types::sol_data::Uint<256>>::abi_decode(black_box(&data), true).unwrap();
+            black_box(res);
         })
     });
 
     // ethers
     group.bench_function("ethers", |b| {
         b.iter(|| {
-             let res = EthersU256::decode(black_box(&data[..])).unwrap();
-             black_box(res);
+            let res = EthersU256::decode(black_box(&data[..])).unwrap();
+            black_box(res);
         })
     });
 
@@ -56,12 +57,18 @@ fn bench_simple_tuple(c: &mut Criterion) {
     // 32 * 3 = 96 bytes
     let mut data = Vec::new();
     // 1. uint256(1)
-    let mut p1 = [0u8; 32]; p1[31] = 1; data.extend_from_slice(&p1);
+    let mut p1 = [0u8; 32];
+    p1[31] = 1;
+    data.extend_from_slice(&p1);
     // 2. address
-    let mut p2 = [0u8; 32]; p2[31] = 0xAA; data.extend_from_slice(&p2);
+    let mut p2 = [0u8; 32];
+    p2[31] = 0xAA;
+    data.extend_from_slice(&p2);
     // 3. bool(true)
-    let mut p3 = [0u8; 32]; p3[31] = 1; data.extend_from_slice(&p3);
-    
+    let mut p3 = [0u8; 32];
+    p3[31] = 1;
+    data.extend_from_slice(&p3);
+
     let data_slice = data.as_slice();
 
     // zabi-rs
@@ -77,8 +84,8 @@ fn bench_simple_tuple(c: &mut Criterion) {
     // alloy
     group.bench_function("alloy", |b| {
         b.iter(|| {
-             let res = SimpleTuple::abi_decode(black_box(data_slice), true).unwrap();
-             black_box(res);
+            let res = SimpleTuple::abi_decode(black_box(data_slice), true).unwrap();
+            black_box(res);
         })
     });
 
@@ -92,8 +99,8 @@ fn bench_simple_tuple(c: &mut Criterion) {
     ];
     group.bench_function("ethers", |b| {
         b.iter(|| {
-             let res = ethers::abi::decode(&params, black_box(data_slice)).unwrap();
-             black_box(res);
+            let res = ethers::abi::decode(&params, black_box(data_slice)).unwrap();
+            black_box(res);
         })
     });
 
@@ -115,7 +122,8 @@ fn bench_array(c: &mut Criterion) {
     group.bench_function("zabi-rs", |b| {
         b.iter(|| {
             // zero-allocation: just wrapping the slice
-            let arr = zabi_rs::decoder::read_array_fixed::<ZU256>(black_box(data_slice), 0, 100).unwrap();
+            let arr =
+                zabi_rs::decoder::read_array_fixed::<ZU256>(black_box(data_slice), 0, 100).unwrap();
             // Access last element to ensure lazy evaluation doesn't skip everything (though construction itself is O(1))
             let last = arr.get(99).unwrap();
             black_box(last);
@@ -126,24 +134,30 @@ fn bench_array(c: &mut Criterion) {
     // generic array decoding
     group.bench_function("alloy", |b| {
         b.iter(|| {
-             let res = <alloy_sol_types::sol_data::FixedArray<alloy_sol_types::sol_data::Uint<256>, 100>>::abi_decode(black_box(data_slice), true).unwrap();
-             black_box(res);
+            let res = <alloy_sol_types::sol_data::FixedArray<
+                alloy_sol_types::sol_data::Uint<256>,
+                100,
+            >>::abi_decode(black_box(data_slice), true)
+            .unwrap();
+            black_box(res);
         })
     });
 
     // ethers
-    let params = vec![
-        ethers::abi::ParamType::FixedArray(Box::new(ethers::abi::ParamType::Uint(256)), 100),
-    ];
-    group.bench_function("ethers", |b| { // Decoding as a single param (tuple of 1)
+    let params = vec![ethers::abi::ParamType::FixedArray(
+        Box::new(ethers::abi::ParamType::Uint(256)),
+        100,
+    )];
+    group.bench_function("ethers", |b| {
+        // Decoding as a single param (tuple of 1)
         // Ethers decode returns vec<Token>
         b.iter(|| {
-             // We need to wrap it in a tuple for ethers usually, or use decode_params?
-             // abi::decode takes &[ParamType].
-             // Note: data for FixedArray in top-level might be different if it's not a tuple?
-             // ABI encoding is always a tuple of parameters. So if we have just uint256[100], it is treated as (uint256[100]).
-             let res = ethers::abi::decode(&params, black_box(data_slice)).unwrap();
-             black_box(res);
+            // We need to wrap it in a tuple for ethers usually, or use decode_params?
+            // abi::decode takes &[ParamType].
+            // Note: data for FixedArray in top-level might be different if it's not a tuple?
+            // ABI encoding is always a tuple of parameters. So if we have just uint256[100], it is treated as (uint256[100]).
+            let res = ethers::abi::decode(&params, black_box(data_slice)).unwrap();
+            black_box(res);
         })
     });
 
@@ -156,7 +170,7 @@ fn bench_u64(c: &mut Criterion) {
     let mut data = [0u8; 32];
     let val: u64 = 123456789;
     data[24..32].copy_from_slice(&val.to_be_bytes());
-    
+
     // zabi-rs
     group.bench_function("zabi-rs", |b| {
         b.iter(|| {
@@ -164,26 +178,33 @@ fn bench_u64(c: &mut Criterion) {
             black_box(res);
         })
     });
-    
+
     // alloy
     group.bench_function("alloy", |b| {
         b.iter(|| {
-             let res = <alloy_sol_types::sol_data::Uint<64>>::abi_decode(black_box(&data), true).unwrap();
-             black_box(res);
+            let res =
+                <alloy_sol_types::sol_data::Uint<64>>::abi_decode(black_box(&data), true).unwrap();
+            black_box(res);
         })
     });
-    
+
     // ethers
     let params = vec![ethers::abi::ParamType::Uint(64)];
     group.bench_function("ethers", |b| {
         b.iter(|| {
-             let res = ethers::abi::decode(&params, black_box(&data)).unwrap();
-             black_box(res);
+            let res = ethers::abi::decode(&params, black_box(&data)).unwrap();
+            black_box(res);
         })
     });
-    
+
     group.finish();
 }
 
-criterion_group!(benches, bench_uint256, bench_u64, bench_simple_tuple, bench_array);
+criterion_group!(
+    benches,
+    bench_uint256,
+    bench_u64,
+    bench_simple_tuple,
+    bench_array
+);
 criterion_main!(benches);

@@ -1,11 +1,10 @@
+use crate::ZError;
 use core::fmt;
 use core::marker::PhantomData;
-use crate::ZError;
 
-// We need to refer to ZDecode trait. 
+// We need to refer to ZDecode trait.
 // Since we are in a submodule, we can use crate::ZDecode
 use crate::ZDecode;
-
 
 /// Wrapper for EVM Arrays (fixed or dynamic).
 /// Provides zero-copy access to elements.
@@ -35,8 +34,9 @@ impl<'a, T> ZArray<'a, T> {
         self.length == 0
     }
 
-    pub fn get(&self, index: usize) -> Result<T, ZError> 
-    where T: ZDecode<'a>
+    pub fn get(&self, index: usize) -> Result<T, ZError>
+    where
+        T: ZDecode<'a>,
     {
         if index >= self.length {
             return Err(ZError::OutOfBounds(index, self.length));
@@ -225,7 +225,7 @@ impl<'a> ZInt256<'a> {
         // For signed, check sign extension
         let is_negative = self.0[0] & 0x80 != 0;
         let expected_padding = if is_negative { 0xff } else { 0x00 };
-        
+
         // Check if upper 16 bytes are proper sign extension
         for i in 0..16 {
             if self.0[i] != expected_padding {
@@ -243,7 +243,7 @@ impl<'a> ZInt256<'a> {
     pub fn to_i64(&self) -> Option<i64> {
         let is_negative = self.0[0] & 0x80 != 0;
         let expected_padding = if is_negative { 0xff } else { 0x00 };
-        
+
         // Check if upper 24 bytes are proper sign extension
         for i in 0..24 {
             if self.0[i] != expected_padding {
@@ -303,7 +303,8 @@ impl<'a> fmt::Debug for ZBytes<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "ZBytes(len={}, data=0x", self.0.len())?;
         for (i, byte) in self.0.iter().enumerate() {
-            if i >= 32 { // Truncate for debug
+            if i >= 32 {
+                // Truncate for debug
                 write!(f, "...")?;
                 break;
             }
