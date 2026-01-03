@@ -47,6 +47,12 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 - [x] **Decoder Improvements**:
     - [x] Offset-based decoding logic updates.
 
+### v0.0.9 - Maintenance & Cleanup (DONE)
+- [x] **Project Structure**:
+    - [x] Fix `zabi-derive` publishing order and dependencies.
+- [x] **Documentation**:
+    - [x] Updated versioning and instructions.
+
 ### v0.0.8 - Comprehensive Features (DONE)
 - [x] **Iterators & Traits**:
     - [x] `ZArray` iterator support (`iter()`, `IntoIterator`).

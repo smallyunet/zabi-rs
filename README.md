@@ -38,7 +38,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-zabi-rs = "0.0.6"
+zabi-rs = "0.0.9"
 ```
 
 ## Usage
