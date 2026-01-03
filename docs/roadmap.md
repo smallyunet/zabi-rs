@@ -47,6 +47,19 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 - [x] **Decoder Improvements**:
     - [x] Offset-based decoding logic updates.
 
+### v0.0.7 - Function Calls & Reverts (DONE)
+- [x] **Revert Reason Decoding**:
+    - [x] `ZRevert` enum supporting `Error(string)` and `Panic(uint256)`.
+    - [x] `decode_revert()` function.
+    - [x] `revert_to_string!` macro.
+- [x] **Function Call Support**:
+    - [x] `ZCallResult<T>` for handling results or reverts.
+    - [x] `decode_call_result()` function.
+    - [x] `decode_call!` macro for argument dispatching.
+- [x] **Integer Utilities**:
+    - [x] `ZU256::is_max()` helper.
+    - [x] `ZInt256::abs()`, `signum()`, `is_positive()` helpers.
+
 ### v0.0.6 - Core Enhancements (DONE)
 - [x] **Derive Macros**:
     - `#[derive(ZDecode)]` for structs.

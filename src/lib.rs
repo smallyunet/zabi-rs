@@ -12,15 +12,16 @@ pub mod types;
 pub mod zbytes_fixed;
 
 pub use decoder::{
-    read_address_from_word, read_array_dyn, read_array_fixed, read_bool, read_bytes, read_i128,
-    read_i16, read_i32, read_i64, read_i8, read_int256, read_selector, read_string, read_u128,
-    read_u16, read_u256, read_u32, read_u64, read_u8, skip_selector,
+    decode_call_result, decode_revert, read_address_from_word, read_array_dyn, read_array_fixed,
+    read_bool, read_bytes, read_i128, read_i16, read_i32, read_i64, read_i8, read_int256,
+    read_selector, read_string, read_u128, read_u16, read_u256, read_u32, read_u64, read_u8,
+    skip_selector,
 };
 pub use error::ZError;
 pub use event::{
     read_topic_address, read_topic_bool, read_topic_int256, read_topic_u256, ZEventLog,
 };
-pub use types::{ZAddress, ZArray, ZBool, ZBytes, ZInt256, ZString, ZU256};
+pub use types::{ZAddress, ZArray, ZBool, ZBytes, ZCallResult, ZInt256, ZRevert, ZString, ZU256};
 pub use zbytes_fixed::{
     read_bytes1, read_bytes16, read_bytes2, read_bytes20, read_bytes3, read_bytes32, read_bytes4,
     read_bytes8, read_bytes_n, ZBytesN,
@@ -54,12 +55,76 @@ macro_rules! decode_tuple {
             Ok((
                 $({
                     let val = <$T as $crate::ZDecode>::decode(data, offset)?;
-                    offset += 32;
+                    offset += <$T as $crate::ZDecode>::HEAD_SIZE;
                     val
                 },)+
             ))
         })()
     }};
+}
+
+/// Decodes a function call from calldata.
+///
+/// This macro extracts the selector and decodes the arguments based on the selector.
+/// It assumes the arguments start immediately after the 4-byte selector.
+///
+/// # Example
+/// ```
+/// use zabi_rs::{decode_call, ZU256, ZAddress};
+///
+/// fn test() {
+///     let calldata = [0u8; 68];
+///     // Example selector for `transfer(address,uint256)`
+///     let transfer_selector = [0xa9, 0x05, 0x9c, 0xbb];
+///
+///     if calldata.starts_with(&transfer_selector) {
+///         let (to, amount) = decode_call!(&calldata, ZAddress, ZU256).unwrap();
+///     }
+/// }
+/// ```
+#[macro_export]
+macro_rules! decode_call {
+    ($data:expr, $($T:ty),+ $(,)?) => {{
+        let data: &[u8] = $data;
+        (|| -> Result<($($T,)+), $crate::ZError> {
+            let params = $crate::skip_selector(data)?;
+            let mut offset: usize = 0;
+            Ok((
+                $({
+                    let val = <$T as $crate::ZDecode>::decode(params, offset)?;
+                    offset += <$T as $crate::ZDecode>::HEAD_SIZE;
+                    val
+                },)+
+            ))
+        })()
+    }};
+}
+
+/// Helper to get a human-readable string from a ZRevert.
+#[macro_export]
+macro_rules! revert_to_string {
+    ($revert:expr) => {
+        match $revert {
+            $crate::ZRevert::Error(s) => s.0,
+            $crate::ZRevert::Panic(p) => {
+                let code = p.to_u32().unwrap_or(0);
+                match code {
+                    0x01 => "Assertion violation",
+                    0x11 => "Arithmetic overflow/underflow",
+                    0x12 => "Division by zero",
+                    0x21 => "Invalid enum value",
+                    0x22 => "Invalid storage byte array",
+                    0x31 => "Pop on empty array",
+                    0x32 => "Index out of bounds",
+                    0x41 => "Out of memory",
+                    0x51 => "Invalid internal function",
+                    _ => "Unknown Panic",
+                }
+            }
+            $crate::ZRevert::Custom(sel, _) => "Custom Error",
+            $crate::ZRevert::Unknown => "Unknown Error",
+        }
+    };
 }
 
 /// The main trait for zero-copy decoding.

@@ -189,6 +189,12 @@ impl<'a> ZU256<'a> {
     pub fn to_u8(&self) -> Option<u8> {
         self.to_u32().and_then(|v| v.try_into().ok())
     }
+
+    /// Check if the value is all ones (max uint256).
+    #[inline]
+    pub fn is_max(&self) -> bool {
+        self.0.iter().all(|&b| b == 0xff)
+    }
 }
 
 /// Wrapper around a 32-byte EVM word (int256) reference.
@@ -292,6 +298,43 @@ impl<'a> ZInt256<'a> {
     #[inline]
     pub fn to_i8(&self) -> Option<i8> {
         self.to_i32().and_then(|v| v.try_into().ok())
+    }
+
+    /// Check if the value is positive (not zero and MSB is 0).
+    #[inline]
+    pub fn is_positive(&self) -> bool {
+        !self.is_negative() && !self.0.iter().all(|&b| b == 0)
+    }
+
+    /// Get the absolute value (returns a new array since we can't easily return a slice of a computed value).
+    /// Note: This violates the zero-copy principle slightly by returning a value, but ZU256 normally wraps a slice.
+    /// For absolute value, we might want to return `[u8; 32]`.
+    #[inline]
+    pub fn abs_bytes(&self) -> [u8; 32] {
+        if !self.is_negative() {
+            *self.0
+        } else {
+            let mut res = [0u8; 32];
+            let mut carry = 1u16;
+            for i in (0..32).rev() {
+                let val = (!self.0[i]) as u16 + carry;
+                res[i] = val as u8;
+                carry = val >> 8;
+            }
+            res
+        }
+    }
+
+    /// Returns the signum of the number (-1, 0, or 1).
+    #[inline]
+    pub fn signum(&self) -> i8 {
+        if self.0.iter().all(|&b| b == 0) {
+            0
+        } else if self.is_negative() {
+            -1
+        } else {
+            1
+        }
     }
 }
 
@@ -402,5 +445,53 @@ impl<'a> ZString<'a> {
     #[inline]
     pub fn as_str(&self) -> &str {
         self.0
+    }
+}
+
+/// Represents an Ethereum revert reason.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ZRevert<'a> {
+    /// Standard error string: Error(string)
+    Error(ZString<'a>),
+    /// Solidity panic: Panic(uint256)
+    Panic(ZU256<'a>),
+    /// Custom error (selector and raw encoded data)
+    Custom(&'a [u8; 4], &'a [u8]),
+    /// Unknown or empty revert
+    Unknown,
+}
+
+impl<'a> fmt::Display for ZRevert<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ZRevert::Error(s) => write!(f, "Revert: {}", s.0),
+            ZRevert::Panic(p) => write!(f, "Panic: {}", p),
+            ZRevert::Custom(sel, _) => write!(f, "CustomError(0x{:02x}{:02x}{:02x}{:02x})", sel[0], sel[1], sel[2], sel[3]),
+            ZRevert::Unknown => write!(f, "Unknown Revert"),
+        }
+    }
+}
+
+/// Result of a function call, either success or revert.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ZCallResult<'a, T> {
+    Success(T),
+    Revert(ZRevert<'a>),
+}
+
+impl<'a, T> ZCallResult<'a, T> {
+    pub fn is_success(&self) -> bool {
+        matches!(self, ZCallResult::Success(_))
+    }
+
+    pub fn is_revert(&self) -> bool {
+        matches!(self, ZCallResult::Revert(_))
+    }
+
+    pub fn unwrap(self) -> T {
+        match self {
+            ZCallResult::Success(val) => val,
+            ZCallResult::Revert(e) => panic!("Called unwrap on a Revert: {:?}", e),
+        }
     }
 }

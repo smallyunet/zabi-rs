@@ -2,7 +2,7 @@ use alloy_sol_types::{sol, SolType};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ethers::abi::AbiDecode;
 use ethers::types::U256 as EthersU256;
-use zabi_rs::{read_address_from_word, read_bool, read_u256, ZU256};
+use zabi_rs::{decode_revert, read_address_from_word, read_bool, read_u256, ZU256};
 
 // Define Sol types for Alloy
 sol! {
@@ -200,11 +200,41 @@ fn bench_u64(c: &mut Criterion) {
     group.finish();
 }
 
+fn bench_revert(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Decoding/Revert");
+
+    // Error("revert message")
+    let mut data = Vec::new();
+    data.extend_from_slice(&[0x08, 0xc3, 0x79, 0xa0]);
+    let mut offset = [0u8; 32];
+    offset[31] = 32;
+    data.extend_from_slice(&offset);
+    let mut len = [0u8; 32];
+    len[31] = 14;
+    data.extend_from_slice(&len);
+    let mut content = [0u8; 32];
+    content[0..14].copy_from_slice(b"revert message");
+    data.extend_from_slice(&content);
+
+    let data_slice = data.as_slice();
+
+    // zabi-rs
+    group.bench_function("zabi-rs", |b| {
+        b.iter(|| {
+            let res = decode_revert(black_box(data_slice)).unwrap();
+            black_box(res);
+        })
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     benches,
     bench_uint256,
     bench_u64,
     bench_simple_tuple,
-    bench_array
+    bench_array,
+    bench_revert
 );
 criterion_main!(benches);

@@ -1,5 +1,5 @@
 use crate::error::ZError;
-use crate::types::{ZAddress, ZArray, ZBool, ZBytes, ZString, ZU256};
+use crate::types::{ZAddress, ZArray, ZBool, ZBytes, ZCallResult, ZRevert, ZString, ZU256};
 use core::convert::TryInto;
 use core::str;
 
@@ -283,4 +283,58 @@ pub fn read_array_dyn<'a, T>(
     }
 
     Ok(ZArray::new(data, start_offset, length))
+}
+
+/// Decodes an Ethereum revert reason from raw data.
+pub fn decode_revert(data: &[u8]) -> Result<ZRevert<'_>, ZError> {
+    if data.is_empty() {
+        return Ok(ZRevert::Unknown);
+    }
+
+    if data.len() < 4 {
+        return Ok(ZRevert::Unknown);
+    }
+
+    let selector = read_selector(data)?;
+    let params = skip_selector(data)?;
+
+    match selector {
+        // Error(string) -> 0x08c379a0
+        [0x08, 0xc3, 0x79, 0xa0] => {
+            let s = read_string(params, 0)?;
+            Ok(ZRevert::Error(s))
+        }
+        // Panic(uint256) -> 0x4e487b71
+        [0x4e, 0x48, 0x7b, 0x71] => {
+            let p = read_u256(params, 0)?;
+            Ok(ZRevert::Panic(p))
+        }
+        _ => {
+            // Treat as custom error
+            Ok(ZRevert::Custom(selector, params))
+        }
+    }
+}
+
+/// Decodes the result of a function call.
+/// If the call was successful (not a revert), it decodes T from the data.
+/// If the data is identified as a revert, it returns ZCallResult::Revert.
+pub fn decode_call_result<'a, T>(data: &'a [u8]) -> Result<ZCallResult<'a, T>, ZError>
+where
+    T: crate::ZDecode<'a>,
+{
+    // A heuristic for identifying reverts:
+    // Reverts are usually short or have specific selectors.
+    // However, a successful return could also have those selectors if T is bytes or similar.
+    // In practice, we usually know if a call reverted from the RPC response.
+    // But for raw data parsing (e.g. from traces), we can try to guess.
+
+    if data.len() >= 4 {
+        let sel = &data[0..4];
+        if sel == [0x08, 0xc3, 0x79, 0xa0] || sel == [0x4e, 0x48, 0x7b, 0x71] {
+            return Ok(ZCallResult::Revert(decode_revert(data)?));
+        }
+    }
+
+    Ok(ZCallResult::Success(T::decode(data, 0)?))
 }
