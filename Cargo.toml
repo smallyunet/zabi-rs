@@ -1,6 +1,6 @@
 [package]
 name = "zabi-rs"
-version = "0.0.7"
+version = "0.0.8"
 edition = "2021"
 description = "Zero-Allocation ABI Decoder for Rust"
 license = "MIT"
@@ -9,10 +9,12 @@ repository = "https://github.com/smallyunet/zabi-rs"
 [dependencies]
 thiserror = { version = "1.0", default-features = false }
 zabi-derive = { path = "./zabi-derive", version = "0.1.0", optional = true }
+serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
 
 [features]
 default = ["derive"]
 derive = ["dep:zabi-derive"]
+serde = ["dep:serde"]
 
 [dev-dependencies]
 criterion = "0.5"
@@ -20,6 +22,7 @@ alloy-sol-types = "0.8"
 ethers = "2.0"
 hex = "0.4"
 tokio = { version = "1", features = ["full"] } # ethers often needs tokio
+serde_json = "1.0"
 
 [[bench]]
 name = "comparison"

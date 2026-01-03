@@ -61,6 +61,17 @@ pub fn peek_word(data: &[u8], offset: usize) -> Result<&[u8; 32], ZError> {
     Ok(array_ref)
 }
 
+/// Helper to read a 32-byte word without bounds checking.
+///
+/// # Safety
+/// Caller must ensure `offset + 32 <= data.len()`.
+#[inline(always)]
+pub unsafe fn peek_word_unchecked(data: &[u8], offset: usize) -> &[u8; 32] {
+    let slice = data.get_unchecked(offset..offset + 32);
+    // Transmute slice to array reference
+    &*(slice.as_ptr() as *const [u8; 32])
+}
+
 /// Helper to read address (last 20 bytes of a 32-byte word).
 #[inline(always)]
 pub fn read_address_from_word(data: &[u8], offset: usize) -> Result<ZAddress<'_>, ZError> {
@@ -73,10 +84,32 @@ pub fn read_address_from_word(data: &[u8], offset: usize) -> Result<ZAddress<'_>
     Ok(ZAddress(addr_ref))
 }
 
+/// Read address without bounds checking.
+///
+/// # Safety
+/// Caller must ensure `offset + 32 <= data.len()`.
+#[inline(always)]
+pub unsafe fn read_address_unchecked(data: &[u8], offset: usize) -> ZAddress<'_> {
+    let word = peek_word_unchecked(data, offset);
+    let addr_slice = word.get_unchecked(12..32);
+    let addr_ref = &*(addr_slice.as_ptr() as *const [u8; 20]);
+    ZAddress(addr_ref)
+}
+
 #[inline(always)]
 pub fn read_u256(data: &[u8], offset: usize) -> Result<ZU256<'_>, ZError> {
     let word = peek_word(data, offset)?;
     Ok(ZU256(word))
+}
+
+/// Read uint256 without bounds checking.
+///
+/// # Safety
+/// Caller must ensure `offset + 32 <= data.len()`.
+#[inline(always)]
+pub unsafe fn read_u256_unchecked(data: &[u8], offset: usize) -> ZU256<'_> {
+    let word = peek_word_unchecked(data, offset);
+    ZU256(word)
 }
 
 #[inline(always)]

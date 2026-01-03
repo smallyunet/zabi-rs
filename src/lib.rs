@@ -1,11 +1,9 @@
-#![no_std]
-
-#[cfg(test)]
-extern crate alloc;
 #[cfg(test)]
 extern crate std;
+extern crate alloc;
 
 pub mod decoder;
+pub mod encoder;
 pub mod error;
 pub mod event;
 pub mod types;
@@ -17,6 +15,7 @@ pub use decoder::{
     read_selector, read_string, read_u128, read_u16, read_u256, read_u32, read_u64, read_u8,
     skip_selector,
 };
+pub use encoder::{encode_address, encode_bool, encode_bytes_data, encode_u256};
 pub use error::ZError;
 pub use event::{
     read_topic_address, read_topic_bool, read_topic_int256, read_topic_u256, ZEventLog,

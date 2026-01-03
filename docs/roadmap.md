@@ -47,6 +47,19 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 - [x] **Decoder Improvements**:
     - [x] Offset-based decoding logic updates.
 
+### v0.0.8 - Comprehensive Features (DONE)
+- [x] **Iterators & Traits**:
+    - [x] `ZArray` iterator support (`iter()`, `IntoIterator`).
+    - [x] `Ord`, `PartialOrd`, `Eq`, `Hash` for all types.
+- [x] **Serde Support**:
+    - [x] Optional `serde` feature.
+    - [x] `Serialize` implementation for all types.
+- [x] **Unchecked APIs**:
+    - [x] `read_u256_unchecked`, `read_address_unchecked` for max performance.
+- [x] **Zero-Allocation Encoding**:
+    - [x] `encoder` module for writing to `&mut [u8]`.
+    - [x] `encode_u256`, `encode_address`, `encode_bool`.
+
 ### v0.0.7 - Function Calls & Reverts (DONE)
 - [x] **Revert Reason Decoding**:
     - [x] `ZRevert` enum supporting `Error(string)` and `Panic(uint256)`.
