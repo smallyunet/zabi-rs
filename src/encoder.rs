@@ -52,17 +52,17 @@ pub fn encode_bool(buf: &mut [u8], offset: usize, value: bool) -> Result<(), ZEr
 pub fn encode_bytes_data(buf: &mut [u8], offset: usize, data: &[u8]) -> Result<usize, ZError> {
     let len = data.len();
     let padded_len = (len + 31) & !31; // Round up to nearest 32
-    
+
     if offset + padded_len > buf.len() {
         return Err(ZError::OutOfBounds(offset + padded_len, buf.len()));
     }
-    
+
     // Copy data
     buf[offset..offset + len].copy_from_slice(data);
     // Zero padding
     if padded_len > len {
         buf[offset + len..offset + padded_len].fill(0);
     }
-    
+
     Ok(padded_len)
 }

@@ -1,6 +1,6 @@
+extern crate alloc;
 #[cfg(test)]
 extern crate std;
-extern crate alloc;
 
 pub mod decoder;
 pub mod encoder;

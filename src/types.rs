@@ -705,7 +705,11 @@ impl<'a> fmt::Display for ZRevert<'a> {
         match self {
             ZRevert::Error(s) => write!(f, "Revert: {}", s.0),
             ZRevert::Panic(p) => write!(f, "Panic: {}", p),
-            ZRevert::Custom(sel, _) => write!(f, "CustomError(0x{:02x}{:02x}{:02x}{:02x})", sel[0], sel[1], sel[2], sel[3]),
+            ZRevert::Custom(sel, _) => write!(
+                f,
+                "CustomError(0x{:02x}{:02x}{:02x}{:02x})",
+                sel[0], sel[1], sel[2], sel[3]
+            ),
             ZRevert::Unknown => write!(f, "Unknown Revert"),
         }
     }
