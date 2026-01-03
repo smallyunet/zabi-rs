@@ -24,11 +24,11 @@ Unlike standard libraries like `ethers-rs` or `alloy-rs` which decode data into 
 
 | Scenario | zabi-rs | alloy | ethers |
 |----------|---|---|---|
-| HeavyArray | 2.1795 ns | 848.00 ns | 4.8948 µs | 
-| Revert | 24.353 ns | N/A | N/A | 
-| SimpleTuple | 7.7856 ns | 64.688 ns | 118.82 ns | 
-| Uint256 | 942.61 ps | 20.166 ns | 83.082 ns | 
-| Uint64 | 4.3541 ns | 21.089 ns | 70.453 ns | 
+| HeavyArray | 2.4886 ns | 880.08 ns | 4.8367 µs | 
+| Revert | 24.215 ns | N/A | N/A | 
+| SimpleTuple | 7.7757 ns | 64.664 ns | 117.33 ns | 
+| Uint256 | 935.25 ps | 20.022 ns | 82.709 ns | 
+| Uint64 | 4.3540 ns | 22.022 ns | 71.570 ns | 
 
 <!-- BENCHMARK_TABLE_END -->
 
