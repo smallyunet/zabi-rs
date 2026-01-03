@@ -31,11 +31,11 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
-          cargo publish -p zabi-derive
+          cargo publish --manifest-path zabi-derive/Cargo.toml
           echo "Waiting for crates.io to index zabi-derive..."
           sleep 60
 
       - name: Publish zabi-rs
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: cargo publish -p zabi-rs
+        run: cargo publish
