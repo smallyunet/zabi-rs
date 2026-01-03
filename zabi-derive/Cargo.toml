@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Procedural macros for zabi-rs"
 license = "MIT"
+repository = "https://github.com/smallyunet/zabi-rs"
 
 [lib]
 proc-macro = true
