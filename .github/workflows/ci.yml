@@ -42,7 +42,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Check version consistency
         run: |
-            # We don't enforce tag match here (since it's not a release), 
-            # but we can check if it strictly builds for packaging.
-            # This catches dirty files and missing includes.
-            cargo publish --dry-run
+            # We only dry-run zabi-derive because zabi-rs depends on it
+            # and zabi-derive v0.1.1 is not on crates.io yet.
+            cargo publish --dry-run -p zabi-derive
