@@ -1,6 +1,5 @@
 [package]
 name = "zabi-rs"
-version = "0.0.9"
 edition = "2021"
 description = "Zero-Allocation ABI Decoder for Rust"
 license = "MIT"
