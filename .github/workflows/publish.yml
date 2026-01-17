@@ -20,16 +20,8 @@ jobs:
         shell: bash
         run: |
           TAG_VERSION=${GITHUB_REF#refs/tags/v}
-          echo "Setting version to $TAG_VERSION"
-          
-          # Update zabi-derive version
-          sed -i "s/^version = \".*\"/version = \"$TAG_VERSION\"/" zabi-derive/Cargo.toml
-          
-          # Update zabi-rs version
-          sed -i "s/^version = \".*\"/version = \"$TAG_VERSION\"/" Cargo.toml
-          
-          # Update zabi-derive dependency version in Cargo.toml
-          sed -i "s/zabi-derive = { path = \"\.\/zabi-derive\", version = \"[^\"]*\"/zabi-derive = { path = \".\/zabi-derive\", version = \"$TAG_VERSION\"/" Cargo.toml
+          chmod +x scripts/set_version.py
+          ./scripts/set_version.py $TAG_VERSION
           
           # Verify changes
           grep "^version" Cargo.toml

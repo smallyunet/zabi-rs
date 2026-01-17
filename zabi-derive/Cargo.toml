@@ -1,6 +1,6 @@
 [package]
 name = "zabi-derive"
-version = "0.1.1"
+version = "0.0.10"
 edition = "2021"
 description = "Procedural macros for zabi-rs"
 license = "MIT"
