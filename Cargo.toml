@@ -23,6 +23,7 @@ ethers = "2.0"
 hex = "0.4"
 tokio = { version = "1", features = ["full"] } # ethers often needs tokio
 serde_json = "1.0"
+proptest = "1.0"
 
 [[bench]]
 name = "comparison"

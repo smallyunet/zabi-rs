@@ -104,6 +104,14 @@ fn bench_simple_tuple(c: &mut Criterion) {
         })
     });
 
+    // zabi-rs macro
+    group.bench_function("zabi-rs-macro", |b| {
+        b.iter(|| {
+            let (u, a, boolean) = zabi_rs::decode_tuple!(black_box(data_slice), ZU256, zabi_rs::ZAddress, zabi_rs::ZBool).unwrap();
+            black_box((u, a, boolean));
+        })
+    });
+
     group.finish();
 }
 

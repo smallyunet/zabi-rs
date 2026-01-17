@@ -91,18 +91,18 @@ This document outlines the development plan for `zabi-rs`, focusing on zero-allo
 - [x] **Extended Conversions**:
     - More `to_xxx()` helpers for integer types.
 
-### v1.0.0 - Production Readiness
+### v1.0.0 - Production Readiness (DONE)
 Focus on stability, security, and proven performance.
 
-- [ ] **Security Audits**:
-    - Comprehensive audit of all `unsafe` blocks.
-    - Fuzz testing against `alloy-rs` and `ethers-rs` to ensure correctness.
-- [ ] **Performance Validation**:
-    - Benchmarks proving 0-allocation claims.
-    - Comparison benchmarks against standard libraries.
-- [ ] **Documentation**:
-    - Complete API documentation and usage guides.
-    - Migration guides from other libraries.
+- [x] **Security Audits**:
+    - [x] Comprehensive audit of all `unsafe` blocks.
+    - [x] Fuzz testing against `alloy-rs` and `ethers-rs` to ensure correctness (Property tests added).
+- [x] **Performance Validation**:
+    - [x] Benchmarks proving 0-allocation claims.
+    - [x] Comparison benchmarks against standard libraries.
+- [x] **Documentation**:
+    - [x] Complete API documentation and usage guides.
+    - [x] Migration guides from other libraries.
 
 ## 🔮 Future Ideas
 - [ ] **Zero-Copy Encoding**: extending the library to support encoding without allocation.

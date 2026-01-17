@@ -4745,6 +4745,7 @@ dependencies = [
  "criterion",
  "ethers",
  "hex",
+ "proptest",
  "serde",
  "serde_json",
  "thiserror 1.0.69",

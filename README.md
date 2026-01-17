@@ -43,6 +43,11 @@ zabi-rs = "0.0.9"
 
 ## Usage
 
+### Migration
+Coming from `ethers-rs`? Check out the [Migration Guide](docs/migration.md).
+
+### Examples
+
 ```rust
 use zabi_rs::{read_u256, read_address_from_word};
 

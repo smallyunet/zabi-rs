@@ -67,8 +67,11 @@ pub fn peek_word(data: &[u8], offset: usize) -> Result<&[u8; 32], ZError> {
 /// Caller must ensure `offset + 32 <= data.len()`.
 #[inline(always)]
 pub unsafe fn peek_word_unchecked(data: &[u8], offset: usize) -> &[u8; 32] {
+    // SAFETY: Caller guarantees offset + 32 <= data.len().
     let slice = data.get_unchecked(offset..offset + 32);
     // Transmute slice to array reference
+    // SAFETY: The slice has length 32, so it's valid to cast to &[u8; 32].
+    // Alignment of u8 is 1, so alignment requirements are met.
     &*(slice.as_ptr() as *const [u8; 32])
 }
 
@@ -90,8 +93,11 @@ pub fn read_address_from_word(data: &[u8], offset: usize) -> Result<ZAddress<'_>
 /// Caller must ensure `offset + 32 <= data.len()`.
 #[inline(always)]
 pub unsafe fn read_address_unchecked(data: &[u8], offset: usize) -> ZAddress<'_> {
+    // SAFETY: Caller guarantees offset + 32 <= data.len().
     let word = peek_word_unchecked(data, offset);
+    // SAFETY: 12..32 is within 0..32 bounds of the word.
     let addr_slice = word.get_unchecked(12..32);
+    // SAFETY: Slice is length 20, cast to [u8; 20] is valid.
     let addr_ref = &*(addr_slice.as_ptr() as *const [u8; 20]);
     ZAddress(addr_ref)
 }
@@ -108,6 +114,7 @@ pub fn read_u256(data: &[u8], offset: usize) -> Result<ZU256<'_>, ZError> {
 /// Caller must ensure `offset + 32 <= data.len()`.
 #[inline(always)]
 pub unsafe fn read_u256_unchecked(data: &[u8], offset: usize) -> ZU256<'_> {
+    // SAFETY: Caller guarantees offset check.
     let word = peek_word_unchecked(data, offset);
     ZU256(word)
 }
