@@ -4739,7 +4739,7 @@ dependencies = [
 
 [[package]]
 name = "zabi-rs"
-version = "0.0.9"
+version = "0.0.0"
 dependencies = [
  "alloy-sol-types",
  "criterion",

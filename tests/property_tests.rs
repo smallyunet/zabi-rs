@@ -1,7 +1,7 @@
+use alloy_sol_types::sol_data::{Address, Bool, Uint};
+use alloy_sol_types::{SolType, SolValue};
 use proptest::prelude::*;
 use zabi_rs::{ZAddress, ZBool, ZDecode, ZU256};
-use alloy_sol_types::{SolType, SolValue};
-use alloy_sol_types::sol_data::{Address, Bool, Uint};
 
 proptest! {
     #[test]
@@ -23,7 +23,7 @@ proptest! {
 
         // encoded address is 32 bytes (padded)
         let decoded = ZAddress::decode(&encoded, 0).expect("Failed to decode ZAddress");
-        
+
         // ZAddress.as_bytes() returns [u8; 20] right aligned in the 32 byte word
         prop_assert_eq!(decoded.as_bytes(), val.as_slice());
     }
