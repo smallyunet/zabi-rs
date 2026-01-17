@@ -16,16 +16,24 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Check version consistency
+      - name: Set version from tag
+        shell: bash
         run: |
-          CARGO_VERSION=$(grep "^version =" Cargo.toml | head -n 1 | awk -F '"' '{print $2}')
-          TAG_VERSION=${GITHUB_REF_NAME#v}
-          echo "Cargo version: $CARGO_VERSION"
-          echo "Tag version: $TAG_VERSION"
-          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
-            echo "::error::Version mismatch! Cargo.toml ($CARGO_VERSION) != Tag ($TAG_VERSION)"
-            exit 1
-          fi
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Setting version to $TAG_VERSION"
+          
+          # Update zabi-derive version
+          sed -i "s/^version = \".*\"/version = \"$TAG_VERSION\"/" zabi-derive/Cargo.toml
+          
+          # Update zabi-rs version
+          sed -i "s/^version = \".*\"/version = \"$TAG_VERSION\"/" Cargo.toml
+          
+          # Update zabi-derive dependency version in Cargo.toml
+          sed -i "s/zabi-derive = { path = \"\.\/zabi-derive\", version = \"[^\"]*\"/zabi-derive = { path = \".\/zabi-derive\", version = \"$TAG_VERSION\"/" Cargo.toml
+          
+          # Verify changes
+          grep "^version" Cargo.toml
+          grep "zabi-derive" Cargo.toml
 
       - name: Publish zabi-derive
         env:
