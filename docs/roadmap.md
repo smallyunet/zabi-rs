@@ -3,13 +3,13 @@
 ## 🌟 Vision
 To be the standard bare-metal ABI toolkit for the Rust Ethereum ecosystem.
 
-## ✅ Completed (v1.0.0)
+## ✅ Completed (v0.0.x)
 - [x] **Core Decoding**: Primitives (u256, address, bool), Fixed Bytes, Arrays, Tuples.
 - [x] **Zero-Allocation Architecture**: Lifetime-bound wrappers (`ZU256<'a>`, `ZBytes<'a>`).
 - [x] **Macros**: `decode_tuple!`, `decode_call!`, `ZDecode` derive.
 - [x] **Production Readiness**: Security audits, fuzzing, and benchmarks.
 
-## 🚧 Next Steps (v1.1+)
+## 🚧 Next Steps (v0.0.13+)
 
 ### Ecosystem Integration
 - [ ] **WASM Support**: First-class support for `wasm32-unknown-unknown` (CI verification).

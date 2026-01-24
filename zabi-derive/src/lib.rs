@@ -32,7 +32,11 @@ pub fn zabi_decode_derive(input: TokenStream) -> TokenStream {
                 quote! {
                     const HEAD_SIZE: usize = 0 #(+ #head_size_recurse)*;
                     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
-                        let mut offset = offset;
+                        if offset > data.len() {
+                            return Err(::zabi_rs::ZError::OutOfBounds(offset, data.len()));
+                        }
+                        let data = &data[offset..];
+                        let mut offset: usize = 0;
                         Ok(#name {
                             #(#field_recurse),*
                         })
@@ -57,7 +61,11 @@ pub fn zabi_decode_derive(input: TokenStream) -> TokenStream {
                 quote! {
                     const HEAD_SIZE: usize = 0 #(+ #head_size_recurse)*;
                     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
-                        let mut offset = offset;
+                        if offset > data.len() {
+                            return Err(::zabi_rs::ZError::OutOfBounds(offset, data.len()));
+                        }
+                        let data = &data[offset..];
+                        let mut offset: usize = 0;
                         Ok(#name (
                             #(#field_recurse),*
                         ))
@@ -67,7 +75,10 @@ pub fn zabi_decode_derive(input: TokenStream) -> TokenStream {
             Fields::Unit => {
                 quote! {
                     const HEAD_SIZE: usize = 0;
-                    fn decode(data: &'a [u8], _offset: usize) -> Result<Self, ::zabi_rs::ZError> {
+                    fn decode(data: &'a [u8], offset: usize) -> Result<Self, ::zabi_rs::ZError> {
+                        if offset > data.len() {
+                            return Err(::zabi_rs::ZError::OutOfBounds(offset, data.len()));
+                        }
                         Ok(#name)
                     }
                 }

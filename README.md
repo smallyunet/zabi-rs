@@ -21,7 +21,7 @@
 
 ```toml
 [dependencies]
-zabi-rs = "1.0.0"
+zabi-rs = "0.0.13"
 ```
 
 ```rust

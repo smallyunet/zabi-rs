@@ -4730,7 +4730,7 @@ dependencies = [
 
 [[package]]
 name = "zabi-derive"
-version = "0.0.10"
+version = "0.0.13"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4739,8 +4739,9 @@ dependencies = [
 
 [[package]]
 name = "zabi-rs"
-version = "0.0.10"
+version = "0.0.13"
 dependencies = [
+ "alloy-primitives",
  "alloy-sol-types",
  "criterion",
  "ethers",
@@ -4748,7 +4749,6 @@ dependencies = [
  "proptest",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
  "tokio",
  "zabi-derive",
 ]

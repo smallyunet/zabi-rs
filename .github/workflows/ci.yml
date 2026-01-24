@@ -39,6 +39,19 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
+  wasm:
+    name: wasm32 Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
+      - name: Check (no default features)
+        run: cargo check --target wasm32-unknown-unknown --no-default-features
+      - name: Check (default features)
+        run: cargo check --target wasm32-unknown-unknown
+
   dry-run-publish:
     name: Dry Run Publish
     runs-on: ubuntu-latest
@@ -47,6 +60,5 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Check version consistency
         run: |
-            # We only dry-run zabi-derive because zabi-rs depends on it
-            # and zabi-derive v0.1.1 is not on crates.io yet.
+            # We only dry-run zabi-derive because zabi-rs depends on it.
             cargo publish --dry-run --manifest-path zabi-derive/Cargo.toml

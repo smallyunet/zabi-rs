@@ -6,6 +6,9 @@ use core::marker::PhantomData;
 #[cfg(feature = "serde")]
 use serde::{Serialize, Serializer};
 
+#[cfg(feature = "alloy")]
+use alloy_primitives::{Address as AlloyAddress, U256 as AlloyU256};
+
 // We need to refer to ZDecode trait.
 // Since we are in a submodule, we can use crate::ZDecode
 use crate::ZDecode;
@@ -142,6 +145,21 @@ impl<'a> ZAddress<'a> {
     #[inline]
     pub fn as_bytes(&self) -> &[u8; 20] {
         self.0
+    }
+
+    /// Convert to `alloy_primitives::Address` (requires `alloy` feature).
+    #[cfg(feature = "alloy")]
+    #[inline]
+    pub fn to_alloy(&self) -> AlloyAddress {
+        AlloyAddress::from(*self.0)
+    }
+}
+
+#[cfg(feature = "alloy")]
+impl<'a> From<ZAddress<'a>> for AlloyAddress {
+    #[inline]
+    fn from(value: ZAddress<'a>) -> Self {
+        value.to_alloy()
     }
 }
 
@@ -284,6 +302,21 @@ impl<'a> ZU256<'a> {
     #[inline]
     pub fn is_max(&self) -> bool {
         self.0.iter().all(|&b| b == 0xff)
+    }
+
+    /// Convert to `alloy_primitives::U256` (requires `alloy` feature).
+    #[cfg(feature = "alloy")]
+    #[inline]
+    pub fn to_alloy(&self) -> AlloyU256 {
+        AlloyU256::from_be_bytes(*self.0)
+    }
+}
+
+#[cfg(feature = "alloy")]
+impl<'a> From<ZU256<'a>> for AlloyU256 {
+    #[inline]
+    fn from(value: ZU256<'a>) -> Self {
+        value.to_alloy()
     }
 }
 

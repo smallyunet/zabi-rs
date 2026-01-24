@@ -1,3 +1,5 @@
+#![no_std]
+
 extern crate alloc;
 #[cfg(test)]
 extern crate std;
@@ -52,11 +54,13 @@ macro_rules! decode_tuple {
         let mut offset: usize = 0;
         (|| -> Result<($($T,)+), $crate::ZError> {
             Ok((
-                $({
-                    let val = <$T as $crate::ZDecode>::decode(data, offset)?;
-                    offset += <$T as $crate::ZDecode>::HEAD_SIZE;
-                    val
-                },)+
+                $(
+                    {
+                        let val = <$T as $crate::ZDecode>::decode(data, offset)?;
+                        offset += <$T as $crate::ZDecode>::HEAD_SIZE;
+                        val
+                    }
+                ,)+
             ))
         })()
     }};
@@ -202,7 +206,13 @@ macro_rules! impl_zdecode_tuple {
     ($($T:ident),+) => {
         impl<'a, $($T: ZDecode<'a>),+> ZDecode<'a> for ($($T,)+) {
             const HEAD_SIZE: usize = 0 $(+ <$T as ZDecode>::HEAD_SIZE)*;
-            fn decode(data: &'a [u8], mut offset: usize) -> Result<Self, ZError> {
+            fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
+                if offset > data.len() {
+                    return Err(ZError::OutOfBounds(offset, data.len()));
+                }
+                let data = &data[offset..];
+
+                let mut offset: usize = 0;
                 #[allow(unused_assignments)]
                 Ok((
                     $({
