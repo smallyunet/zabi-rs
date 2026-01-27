@@ -334,7 +334,7 @@ mod tests {
         let val_bool = read_bool(&data, 0).expect("failed bool");
         let val_str = read_string(&data, 32).expect("failed string");
 
-        assert_eq!(val_bool.0, true);
+        assert!(val_bool.0);
         assert_eq!(val_str.0, "Hello");
     }
 

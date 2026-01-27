@@ -65,7 +65,7 @@ fn test_int_helpers() {
     assert!(!zero_u256.is_max());
 
     // ZInt256 signum and abs
-    let mut neg_one_bytes = [0xff; 32];
+    let neg_one_bytes = [0xff; 32];
     let neg_one = ZInt256(&neg_one_bytes);
     assert_eq!(neg_one.signum(), -1);
     assert!(!neg_one.is_positive());

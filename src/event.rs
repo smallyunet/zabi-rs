@@ -163,8 +163,8 @@ mod tests {
     fn test_topic_as_address() {
         let mut topic = [0u8; 32];
         // Address in last 20 bytes
-        for i in 12..32 {
-            topic[i] = (i - 11) as u8;
+        for (i, b) in topic.iter_mut().enumerate().skip(12) {
+            *b = (i - 11) as u8;
         }
 
         let addr = read_topic_address(&topic).unwrap();
@@ -176,10 +176,10 @@ mod tests {
     fn test_topic_bool() {
         let mut topic_true = [0u8; 32];
         topic_true[31] = 1;
-        assert_eq!(read_topic_bool(&topic_true).unwrap(), true);
+        assert!(read_topic_bool(&topic_true).unwrap());
 
         let topic_false = [0u8; 32];
-        assert_eq!(read_topic_bool(&topic_false).unwrap(), false);
+        assert!(!read_topic_bool(&topic_false).unwrap());
 
         let mut topic_invalid = [0u8; 32];
         topic_invalid[31] = 2;

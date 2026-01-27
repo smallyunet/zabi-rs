@@ -171,13 +171,13 @@ mod tests {
     #[test]
     fn test_bytes32() {
         let mut data = [0u8; 32];
-        for i in 0..32 {
-            data[i] = i as u8;
+        for (i, b) in data.iter_mut().enumerate() {
+            *b = i as u8;
         }
 
         let result = read_bytes32(&data, 0).expect("should decode bytes32");
-        for i in 0..32 {
-            assert_eq!(result.0[i], i as u8);
+        for (i, b) in result.0.iter().enumerate() {
+            assert_eq!(*b, i as u8);
         }
     }
 
@@ -207,13 +207,13 @@ mod tests {
     #[test]
     fn test_bytes20() {
         let mut data = [0u8; 32];
-        for i in 0..20 {
-            data[i] = (i + 1) as u8;
+        for (i, b) in data.iter_mut().enumerate().take(20) {
+            *b = (i + 1) as u8;
         }
 
         let result = read_bytes20(&data, 0).expect("should decode bytes20");
-        for i in 0..20 {
-            assert_eq!(result.0[i], (i + 1) as u8);
+        for (i, b) in result.0.iter().enumerate() {
+            assert_eq!(*b, (i + 1) as u8);
         }
     }
 

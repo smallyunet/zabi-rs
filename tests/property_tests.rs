@@ -1,5 +1,5 @@
 use alloy_sol_types::sol_data::{Address, Bool, Uint};
-use alloy_sol_types::{SolType, SolValue};
+use alloy_sol_types::SolType;
 use proptest::prelude::*;
 use zabi_rs::{ZAddress, ZBool, ZDecode, ZU256};
 

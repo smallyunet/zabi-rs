@@ -1,4 +1,4 @@
-use zabi_rs::{ZAddress, ZArray, ZBool, ZDecode, ZString, ZU256};
+use zabi_rs::{ZAddress, ZBool, ZDecode, ZString, ZU256};
 
 #[derive(Debug, ZDecode, PartialEq)]
 struct InnerStruct<'a> {
@@ -47,7 +47,7 @@ fn test_derive_and_nested() {
 
     assert_eq!(decoded.addr.as_bytes()[19], 0xAA);
     assert_eq!(decoded.inner.val.as_bytes()[31], 42);
-    assert_eq!(decoded.inner.flag.as_bool(), true);
+    assert!(decoded.inner.flag.as_bool());
     assert_eq!(decoded.message.as_str(), "Hello");
 }
 

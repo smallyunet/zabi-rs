@@ -3,6 +3,18 @@ use crate::types::{ZAddress, ZArray, ZBool, ZBytes, ZCallResult, ZRevert, ZStrin
 use core::convert::TryInto;
 use core::str;
 
+#[inline(always)]
+fn word_tail_u64(word: &[u8; 32]) -> u64 {
+    u64::from_be_bytes(word[24..32].try_into().expect("slice is 8 bytes"))
+}
+
+#[inline(always)]
+fn u64_to_usize(value: u64) -> Result<usize, ZError> {
+    value
+        .try_into()
+        .map_err(|_| ZError::Custom("Value too large for usize"))
+}
+
 /// Read the 4-byte function selector from calldata.
 /// Returns a reference to the first 4 bytes.
 ///
@@ -252,7 +264,7 @@ pub fn read_bool(data: &[u8], offset: usize) -> Result<ZBool, ZError> {
 pub fn read_bytes(data: &[u8], initial_offset: usize) -> Result<ZBytes<'_>, ZError> {
     // 1. Read the relative offset from the head.
     let offset_word = peek_word(data, initial_offset)?;
-    let data_offset_usize = usize::from_be_bytes(offset_word[24..32].try_into().unwrap()); // Last 8 bytes for usize is safe assumption for now < 2^64
+    let data_offset_usize = u64_to_usize(word_tail_u64(offset_word))?;
 
     // ABI encoding offsets are usually absolute from the start of the encoded tuple?
     // Wait, in dynamic types, the value in the "static" part is the offset from the START of the current encoding.
@@ -262,13 +274,21 @@ pub fn read_bytes(data: &[u8], initial_offset: usize) -> Result<ZBytes<'_>, ZErr
         return Err(ZError::OutOfBounds(data_offset_usize, data.len()));
     }
 
+    if data_offset_usize % 32 != 0 {
+        return Err(ZError::Custom("ABI offset is not word-aligned"));
+    }
+
     // 2. Read length of bytes at the data location.
     let len_word = peek_word(data, data_offset_usize)?;
-    let length = usize::from_be_bytes(len_word[24..32].try_into().unwrap());
+    let length = u64_to_usize(word_tail_u64(len_word))?;
 
     // 3. Read the actual data bytes.
-    let start = data_offset_usize + 32;
-    let end = start + length;
+    let start = data_offset_usize
+        .checked_add(32)
+        .ok_or(ZError::Custom("Overflow computing bytes start"))?;
+    let end = start
+        .checked_add(length)
+        .ok_or(ZError::Custom("Overflow computing bytes end"))?;
 
     if end > data.len() {
         return Err(ZError::OutOfBounds(end, data.len()));
@@ -289,7 +309,13 @@ pub fn read_array_fixed<'a, T>(
     length: usize,
 ) -> Result<ZArray<'a, T>, ZError> {
     // Basic bounds check for the whole block
-    let end = offset + length * 32;
+    let end = offset
+        .checked_add(
+            length
+                .checked_mul(32)
+                .ok_or(ZError::Custom("Overflow computing fixed array size"))?,
+        )
+        .ok_or(ZError::Custom("Overflow computing fixed array end"))?;
     if end > data.len() {
         return Err(ZError::OutOfBounds(end, data.len()));
     }
@@ -303,23 +329,35 @@ pub fn read_array_dyn<'a, T>(
     // 1. Read offset to array (relative to current position in tuple, usually passed as offset 0?)
     // No, initial_offset points to the 'Head' word containing the offset.
     let offset_word = peek_word(data, initial_offset)?;
-    let data_offset_usize = usize::from_be_bytes(offset_word[24..32].try_into().unwrap());
+    let data_offset_usize = u64_to_usize(word_tail_u64(offset_word))?;
 
     if data_offset_usize >= data.len() {
         return Err(ZError::OutOfBounds(data_offset_usize, data.len()));
     }
 
+    if data_offset_usize % 32 != 0 {
+        return Err(ZError::Custom("ABI offset is not word-aligned"));
+    }
+
     // 2. Read length
     let len_word = peek_word(data, data_offset_usize)?;
-    let length = usize::from_be_bytes(len_word[24..32].try_into().unwrap());
+    let length = u64_to_usize(word_tail_u64(len_word))?;
 
     // 3. Start of data is 32 bytes after the length word
-    let start_offset = data_offset_usize + 32;
+    let start_offset = data_offset_usize
+        .checked_add(32)
+        .ok_or(ZError::Custom("Overflow computing dynamic array start"))?;
 
     // Bounds check?
     // start_offset + length * 32
-    if start_offset + length * 32 > data.len() {
-        return Err(ZError::OutOfBounds(start_offset + length * 32, data.len()));
+    let byte_len = length
+        .checked_mul(32)
+        .ok_or(ZError::Custom("Overflow computing dynamic array size"))?;
+    let end = start_offset
+        .checked_add(byte_len)
+        .ok_or(ZError::Custom("Overflow computing dynamic array end"))?;
+    if end > data.len() {
+        return Err(ZError::OutOfBounds(end, data.len()));
     }
 
     Ok(ZArray::new(data, start_offset, length))
