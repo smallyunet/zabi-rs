@@ -9,8 +9,14 @@ fn test_decode_tuple_reports_type_and_offset_context() {
     let message = err.to_string();
 
     assert!(message.contains("ZBool"), "unexpected error: {message}");
-    assert!(message.contains("byte offset 32"), "unexpected error: {message}");
-    assert!(message.contains("not 0 or 1"), "unexpected error: {message}");
+    assert!(
+        message.contains("byte offset 32"),
+        "unexpected error: {message}"
+    );
+    assert!(
+        message.contains("not 0 or 1"),
+        "unexpected error: {message}"
+    );
 }
 
 #[allow(dead_code)]
@@ -36,8 +42,14 @@ fn test_derive_reports_nested_field_context() {
     let err = Outer::decode(&data, 0).unwrap_err();
     let message = err.to_string();
 
-    assert!(message.contains("Outer.inner"), "unexpected error: {message}");
+    assert!(
+        message.contains("Outer.inner"),
+        "unexpected error: {message}"
+    );
     assert!(message.contains("Inner.msg"), "unexpected error: {message}");
     assert!(message.contains("ZString"), "unexpected error: {message}");
-    assert!(message.contains("Invalid UTF-8"), "unexpected error: {message}");
+    assert!(
+        message.contains("Invalid UTF-8"),
+        "unexpected error: {message}"
+    );
 }

@@ -199,8 +199,7 @@ impl<'a, T: ZDecode<'a>> ZDecode<'a> for ZArray<'a, T> {
 impl<'a, const N: usize> ZDecode<'a> for ZBytesN<'a, N> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-        zbytes_fixed::read_bytes_n(data, offset)
-            .map_err(|err| err.with_context("ZBytesN", offset))
+        zbytes_fixed::read_bytes_n(data, offset).map_err(|err| err.with_context("ZBytesN", offset))
     }
 }
 

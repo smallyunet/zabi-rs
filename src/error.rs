@@ -41,7 +41,11 @@ impl fmt::Display for ZError {
                 offset,
                 source,
             } => {
-                write!(f, "Failed to decode {} at byte offset {}: {}", label, offset, source)
+                write!(
+                    f,
+                    "Failed to decode {} at byte offset {}: {}",
+                    label, offset, source
+                )
             }
         }
     }
