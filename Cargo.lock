@@ -4730,7 +4730,7 @@ dependencies = [
 
 [[package]]
 name = "zabi-derive"
-version = "0.0.13"
+version = "0.0.14"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4739,7 +4739,7 @@ dependencies = [
 
 [[package]]
 name = "zabi-rs"
-version = "0.0.13"
+version = "0.0.14"
 dependencies = [
  "alloy-primitives",
  "alloy-sol-types",

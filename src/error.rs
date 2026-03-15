@@ -1,3 +1,4 @@
+use alloc::boxed::Box;
 use core::fmt;
 
 #[derive(Debug)]
@@ -6,6 +7,22 @@ pub enum ZError {
     OutOfBounds(usize, usize),
     InvalidUtf8,
     Custom(&'static str),
+    Context {
+        label: &'static str,
+        offset: usize,
+        source: Box<ZError>,
+    },
+}
+
+impl ZError {
+    #[inline]
+    pub fn with_context(self, label: &'static str, offset: usize) -> Self {
+        Self::Context {
+            label,
+            offset,
+            source: Box::new(self),
+        }
+    }
 }
 
 impl fmt::Display for ZError {
@@ -19,6 +36,13 @@ impl fmt::Display for ZError {
             }
             ZError::InvalidUtf8 => write!(f, "Invalid UTF-8 sequence"),
             ZError::Custom(msg) => write!(f, "Error: {}", msg),
+            ZError::Context {
+                label,
+                offset,
+                source,
+            } => {
+                write!(f, "Failed to decode {} at byte offset {}: {}", label, offset, source)
+            }
         }
     }
 }

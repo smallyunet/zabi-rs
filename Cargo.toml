@@ -1,13 +1,13 @@
 [package]
 name = "zabi-rs"
-version = "0.0.13"
+version = "0.0.14"
 edition = "2021"
 description = "Zero-Allocation ABI Decoder for Rust"
 license = "MIT"
 repository = "https://github.com/smallyunet/zabi-rs"
 
 [dependencies]
-zabi-derive = { path = "./zabi-derive", version = "0.0.13", optional = true }
+zabi-derive = { path = "./zabi-derive", version = "0.0.14", optional = true }
 serde = { version = "1.0", default-features = false, features = ["derive"], optional = true }
 alloy-primitives = { version = "0.8", default-features = false, optional = true }
 

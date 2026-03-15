@@ -299,7 +299,7 @@ pub fn read_bytes(data: &[u8], initial_offset: usize) -> Result<ZBytes<'_>, ZErr
 
 pub fn read_string(data: &[u8], initial_offset: usize) -> Result<ZString<'_>, ZError> {
     let zbytes = read_bytes(data, initial_offset)?;
-    let s = str::from_utf8(zbytes.0).map_err(|_| ZError::Custom("Invalid UTF-8 string"))?;
+    let s = str::from_utf8(zbytes.0).map_err(|_| ZError::InvalidUtf8)?;
     Ok(ZString(s))
 }
 

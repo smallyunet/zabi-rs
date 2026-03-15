@@ -140,7 +140,7 @@ pub trait ZDecode<'a>: Sized {
 impl<'a> ZDecode<'a> for ZU256<'a> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-        decoder::read_u256(data, offset)
+        decoder::read_u256(data, offset).map_err(|err| err.with_context("ZU256", offset))
     }
 }
 
@@ -148,20 +148,21 @@ impl<'a> ZDecode<'a> for ZAddress<'a> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         decoder::read_address_from_word(data, offset)
+            .map_err(|err| err.with_context("ZAddress", offset))
     }
 }
 
 impl<'a> ZDecode<'a> for ZBool {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-        decoder::read_bool(data, offset)
+        decoder::read_bool(data, offset).map_err(|err| err.with_context("ZBool", offset))
     }
 }
 
 impl<'a> ZDecode<'a> for ZInt256<'a> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-        decoder::read_int256(data, offset)
+        decoder::read_int256(data, offset).map_err(|err| err.with_context("ZInt256", offset))
     }
 }
 
@@ -170,7 +171,7 @@ macro_rules! impl_zdecode_primitive {
         impl<'a> ZDecode<'a> for $t {
             const HEAD_SIZE: usize = 32;
             fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-                $func(data, offset)
+                $func(data, offset).map_err(|err| err.with_context(stringify!($t), offset))
             }
         }
     };
@@ -191,7 +192,7 @@ impl_zdecode_primitive!(i128, decoder::read_i128);
 impl<'a, T: ZDecode<'a>> ZDecode<'a> for ZArray<'a, T> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-        decoder::read_array_dyn(data, offset)
+        decoder::read_array_dyn(data, offset).map_err(|err| err.with_context("ZArray", offset))
     }
 }
 
@@ -199,6 +200,7 @@ impl<'a, const N: usize> ZDecode<'a> for ZBytesN<'a, N> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
         zbytes_fixed::read_bytes_n(data, offset)
+            .map_err(|err| err.with_context("ZBytesN", offset))
     }
 }
 
@@ -242,7 +244,7 @@ impl_zdecode_tuple!(T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12);
 impl<'a> ZDecode<'a> for ZString<'a> {
     const HEAD_SIZE: usize = 32;
     fn decode(data: &'a [u8], offset: usize) -> Result<Self, ZError> {
-        decoder::read_string(data, offset)
+        decoder::read_string(data, offset).map_err(|err| err.with_context("ZString", offset))
     }
 }
 

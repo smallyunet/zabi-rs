@@ -21,7 +21,7 @@
 
 ```toml
 [dependencies]
-zabi-rs = "0.0.13"
+zabi-rs = "0.0.14"
 ```
 
 ```rust
@@ -55,6 +55,9 @@ fn main() -> Result<(), zabi_rs::ZError> {
 ## 📚 Documentation
 - [Migration Guide from ethers-rs](docs/migration.md)
 - [Full API Documentation](https://docs.rs/zabi-rs)
+
+## 🧭 v0.0.14
+- More descriptive decode failures with type, field, and byte-offset context.
 
 ## 🗺️ Roadmap
 Check out [docs/roadmap.md](docs/roadmap.md) for future plans (Zero-Copy Encoding, WASM).
